@@ -1,0 +1,184 @@
+# The signal catalog is the single source of truth for what App-roved may report.
+# A finding can only be emitted for an id listed here, and the LLM never adds,
+# removes or re-labels signals - it only explains them.
+#
+# provenance
+#   OFFICIAL                 The rule is stated in a document Apple publishes (source = that URL).
+#   COMMUNITY_HEURISTIC      Widely reported by developers (upload errors, forum threads) but not
+#                            spelled out in Apple's published rules.
+#   NOT_PUBLICLY_VERIFIABLE  A claim about App Review behaviour nobody outside Apple can confirm.
+#                            Reported so you can make your own call, never as a blocker.
+# detection
+#   exact      The bytes prove the condition (a key is missing, a flag is set).
+#   heuristic  The bytes suggest it (a symbol is linked - that does not prove it is called).
+
+- id: PLIST-001
+  title: Required bundle keys are missing
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/bundleresources/information-property-list
+  summary: Info.plist must identify the bundle with CFBundleIdentifier, CFBundleExecutable, CFBundleShortVersionString and CFBundleVersion.
+  remediation: Add the missing keys in the target's Info settings and rebuild the archive.
+
+- id: PLIST-002
+  title: Purpose string is empty or a placeholder
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage
+  summary: A usage-description key is present but its text is empty or placeholder text, so the permission prompt does not explain why the app needs access (Guideline 5.1.1).
+  remediation: Write a specific sentence describing what the data is used for, in the user's language.
+
+- id: PLIST-003
+  title: Protected API linked without its purpose string
+  severity: blocker
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/documentation/bundleresources/information-property-list
+  summary: The binary references a class that gates a protected resource, but the matching usage-description key is absent. Accessing the resource without the key terminates the app.
+  remediation: Add the usage-description key, or remove the dependency that pulls the class in if the feature is unused.
+
+- id: PLIST-004
+  title: Export compliance key not declared
+  severity: info
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/bundleresources/information-property-list/itsappusesnonexemptencryption
+  summary: ITSAppUsesNonExemptEncryption is not set, so App Store Connect asks the export-compliance questions on every upload.
+  remediation: Set ITSAppUsesNonExemptEncryption to the value that matches your app's use of encryption.
+
+- id: PLIST-005
+  title: App Transport Security is disabled globally
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity
+  summary: NSAllowsArbitraryLoads is true. Apple documents that disabling ATS can trigger additional App Review and requires justification.
+  remediation: Remove the global exception and scope exceptions to the specific domains that need them.
+
+- id: PLIST-006
+  title: Built with an SDK older than the current upload minimum
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/news/upcoming-requirements/
+  summary: App Store Connect only accepts uploads built with the minimum SDK Apple currently requires. The threshold is configured in settings because Apple raises it roughly once a year.
+  remediation: Rebuild with the current Xcode release.
+
+- id: PLIST-007
+  title: Deployment target below the supported minimum
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/news/upcoming-requirements/
+  summary: MinimumOSVersion is lower than the minimum deployment target App Store Connect accepts.
+  remediation: Raise the deployment target in the build settings.
+
+- id: PLIST-008
+  title: Background modes declared
+  severity: info
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/#software-requirements
+  summary: UIBackgroundModes is declared. Guideline 2.5.4 limits background services to their intended purposes, so each declared mode should map to a feature a reviewer can see.
+  remediation: Remove modes the app does not use and mention the remaining ones in the review notes.
+
+- id: PRIV-001
+  title: Required-reason API used without a privacy manifest
+  severity: blocker
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api
+  summary: The app binary imports symbols from a required-reason API category but the bundle has no PrivacyInfo.xcprivacy. Uploads must declare approved reasons for these APIs.
+  remediation: Add a PrivacyInfo.xcprivacy file to the app target and declare each category with an approved reason code.
+
+- id: PRIV-002
+  title: Required-reason API category not declared in the privacy manifest
+  severity: blocker
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api
+  summary: A privacy manifest exists but does not list a required-reason API category whose symbols the app binary imports.
+  remediation: Add the category under NSPrivacyAccessedAPITypes with the reason code that matches your use.
+
+- id: PRIV-003
+  title: Tracking declared without tracking domains or ATT purpose string
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/bundleresources/privacy-manifest-files
+  summary: The privacy manifest sets NSPrivacyTracking to true but lists no NSPrivacyTrackingDomains, or Info.plist has no NSUserTrackingUsageDescription.
+  remediation: List the tracking domains in the manifest and add the App Tracking Transparency purpose string.
+
+- id: MACHO-001
+  title: Links a private framework
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/#software-requirements
+  summary: The binary loads a library from /System/Library/PrivateFrameworks. Guideline 2.5.1 allows public APIs only.
+  remediation: Replace the private framework with a public API or remove the dependency that links it.
+
+- id: MACHO-002
+  title: References UIWebView
+  severity: blocker
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/documentation/uikit/uiwebview
+  summary: The binary imports the UIWebView class, which is deprecated; Apple stopped accepting apps that use it. The reference often comes from an outdated third-party SDK.
+  remediation: Migrate to WKWebView and update or remove SDKs that still reference UIWebView.
+
+- id: MACHO-003
+  title: Contains a simulator or non-device architecture
+  severity: blocker
+  provenance: COMMUNITY_HEURISTIC
+  detection: exact
+  source: null
+  summary: A binary in the bundle carries an x86_64/i386 slice or is built for the simulator platform. Developers consistently report upload validation rejecting these as unsupported architectures.
+  remediation: Strip simulator slices from embedded frameworks, or switch them to XCFrameworks.
+
+- id: MACHO-004
+  title: Main executable is not position independent
+  severity: warning
+  provenance: COMMUNITY_HEURISTIC
+  detection: exact
+  source: null
+  summary: The MH_PIE flag is not set on the main executable. Modern toolchains set it by default, so its absence usually means a custom linker flag.
+  remediation: Remove -no_pie from the linker flags.
+
+- id: SIGN-001
+  title: Bundle is not code signed
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases
+  summary: The main executable has no code signature. Apps must be signed with a distribution identity to be uploaded.
+  remediation: Export the archive with an App Store distribution method.
+
+- id: SIGN-002
+  title: Signed for development, not distribution
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases
+  summary: The entitlements contain get-task-allow = true, which marks a debuggable development build rather than an App Store distribution build.
+  remediation: Re-export with the App Store Connect distribution method instead of a development or ad-hoc profile.
+
+- id: REVIEW-001
+  title: Placeholder text in user-visible bundle strings
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/app-store/review/guidelines/#performance
+  summary: The display name or a purpose string contains placeholder text. Guideline 2.1 expects final, complete builds.
+  remediation: Replace the placeholder copy before submitting.
+
+- id: REVIEW-002
+  title: Remote feature-flag SDK linked
+  severity: info
+  provenance: NOT_PUBLICLY_VERIFIABLE
+  detection: heuristic
+  source: null
+  summary: The app links a remote-configuration SDK. It is often claimed that reviewers look harder at apps that can change behaviour after approval; nobody outside Apple can verify how review weighs this. Guideline 2.3.1 does prohibit hidden features, whatever mechanism toggles them.
+  remediation: No action needed if every remotely toggled feature is disclosed in the review notes.
