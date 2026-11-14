@@ -19,7 +19,7 @@ from .catalog import Explanation, Finding, Report
 from .llm import LLM
 
 _TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_.]+")
-_CITE = re.compile(r"\[(kb:[a-z0-9-]+#\d+)\]")
+_CITE = re.compile(r"[\[\u3010](kb:[a-z0-9-]+#\d+)[\]\u3011]")  # [..] or full-width 【..】
 _STOP = frozenset("the a an and or of to in is are for with that this it be as on by from not no".split())
 
 

@@ -121,3 +121,8 @@ def test_ungrounded_or_failed_llm_answer_falls_back_to_template(reply):
     explanation = rag.explain(finding(), rag.load_knowledge_base(), FakeLLM(reply))
     assert explanation.generated_by == "template"
     assert "9.9.9" not in explanation.text and "made-up" not in str(explanation.citations)
+
+
+def test_full_width_citations_are_accepted():
+    llm = FakeLLM("Needs an approved reason \u3010kb:privacy-manifests#2\u3011.")
+    assert rag.explain(finding(), rag.load_knowledge_base(), llm).citations == ["kb:privacy-manifests#2"]

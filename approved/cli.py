@@ -15,6 +15,10 @@ _MARK = {"blocker": "✗", "warning": "!", "info": "·"}
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows consoles default to a legacy code page; model output often contains Unicode.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(prog="approved", description="App Store compliance checks for an IPA")
     sub = parser.add_subparsers(dest="command", required=True)
     scan = sub.add_parser("scan", help="analyse an .ipa file")
