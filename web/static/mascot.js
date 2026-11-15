@@ -171,7 +171,7 @@
     checks: "Each check reads your actual build: the binary, Info.plist and privacy manifests.",
     how: "Many rejections are about screenshots, demo accounts and privacy answers, not code. That's what a review covers.",
     pricing: "Already rejected? A rescue includes a reply to App Review, written for you.",
-    faq: "Your code never leaves your computer. The build is trimmed in your browser first.",
+    faq: "Your compiled code never leaves your computer. The build is trimmed in your browser first.",
   };
   let order = [], shown = 0;
   function nextTip() {
@@ -208,7 +208,7 @@
   function schedule() {
     clearTimeout(idleTimer);
     if (closed) return;
-    idleTimer = setTimeout(() => { if (!document.hidden && !document.querySelector("dialog[open]")) { const t = nextTip(); say(t.text, { label: t.label }); } else schedule(); }, 26000);
+    idleTimer = setTimeout(() => { if (!document.hidden && !document.querySelector("dialog[open]") && !blocksSomething()) { const t = nextTip(); say(t.text, { label: t.label }); } else schedule(); }, 26000);
   }
   function tipNow() { closed = false; const t = nextTip(); say(t.text, { label: t.label }); }
 
@@ -226,11 +226,27 @@
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(es => es.forEach(en => {
       const id = en.target.id;
-      if (en.isIntersecting && !said.has(id) && !closed && SECTION_TIPS[id]) { said.add(id); say(SECTION_TIPS[id], { label: "Rovy" }); }
+      if (en.isIntersecting && !said.has(id) && !closed && SECTION_TIPS[id] && !blocksSomething()) { said.add(id); say(SECTION_TIPS[id], { label: "Rovy" }); }
     }), { threshold: 0.35 });
     Object.keys(SECTION_TIPS).forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
   }
-  setTimeout(() => { if (!closed) say("Hi, I'm Rovy. Tap me for an App Store tip, or tap the background to send a wave.", { label: "Rovy", ms: 7000 }); }, 2500);
+  // The first hello waits until the bubble wouldn't cover the upload box or the headline.
+  const HELLO = "Hi, I'm Rovy. Tap me for an App Store tip, or tap the background to send a wave.";
+  function blocksSomething() {
+    if (bubble.classList.contains("show")) return false;
+    const b = bubble.getBoundingClientRect();
+    return [...document.querySelectorAll("#drop, h1, .hero .btn, #sample, .stage")].some(el => {
+      const r = el.getBoundingClientRect();
+      return r.width && r.bottom > 0 && r.top < innerHeight && !(r.right < b.left - 8 || r.left > b.right + 8 || r.bottom < b.top - 8 || r.top > b.bottom + 8);
+    });
+  }
+  function hello() {
+    if (closed || bubble.classList.contains("show")) return;
+    if (blocksSomething()) { addEventListener("scroll", helloLater, { passive: true, once: true }); return; }
+    say(HELLO, { label: "Rovy", ms: 7000 });
+  }
+  function helloLater() { setTimeout(hello, 600); }
+  setTimeout(hello, 2500);
 
   function react(d) {
     if (!d) return;

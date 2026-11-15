@@ -5,9 +5,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>App-roved · Catch App Store rejections before you submit</title>
-<meta name="description" content="Drop your .ipa and see what App Review will flag: missing privacy manifest, empty purpose strings, development signing, outdated SDK. Free scan, and your code never leaves your computer.">
+<meta name="description" content="Drop your .ipa and see what App Review will flag: missing privacy manifest, empty purpose strings, development signing, outdated SDK. Free scan, and your compiled code never leaves your computer.">
 <meta property="og:title" content="App-roved · Catch App Store rejections before you submit">
-<meta property="og:description" content="Free pre-submission scan for iOS builds. Every finding comes with the Apple rule behind it. Your code never leaves your computer.">
+<meta property="og:description" content="Free pre-submission scan for iOS builds. Every finding comes with the Apple rule behind it. Your compiled code never leaves your computer.">
 <meta property="og:image" content="https://app-roved.vercel.app/og.png">
 <meta property="og:url" content="https://app-roved.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-:root{--bg:#07080f;--bg2:#0b0d18;--panel:#0f1222;--panel2:#141831;--line:#232845;--ink:#eceef8;--muted:#a1a8c4;--faint:#646b8c;--acc:#5fd4ff;--acc-ink:#03141c;--block:#ff5d73;--warn:#ffb547;--info:#8f9bd6;--ok:#4fe3a1;color-scheme:dark}
+:root{--bg:#07080f;--bg2:#0b0d18;--panel:#0f1222;--panel2:#141831;--line:#232845;--ink:#eceef8;--muted:#a1a8c4;--faint:#8b92b2;--acc:#5fd4ff;--acc-ink:#03141c;--block:#ff5d73;--warn:#ffb547;--info:#8f9bd6;--ok:#4fe3a1;color-scheme:dark}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Inter Tight",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--acc)}
@@ -364,7 +364,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
     </label>
     <div class="srow">
       <div class="privacy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        <span>Your code never leaves your computer. Your browser trims the build down to its Info.plist, privacy manifests and binary headers, and only that small file is uploaded. It isn't stored.</span></div>
+        <span>Your compiled code never leaves your computer. Your browser trims the build down to its Info.plist, privacy manifests and binary headers (library and symbol names), and only that small file is uploaded. It isn't stored.</span></div>
       <button class="btn ghost sm" id="sample" type="button">No build handy? Try a sample</button>
     </div>
     <div id="theater" hidden aria-live="polite">
@@ -401,11 +401,11 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   <div class="priv-grid">
     <div class="reveal">
       <span class="kicker">Private by design</span>
-      <h2>Your code never leaves your computer.</h2>
+      <h2>Your compiled code never leaves your computer.</h2>
       <p class="sub" style="margin-bottom:0">An .ipa is a zip of everything in your app. The checks only need a few small parts of it, so your browser takes those out and leaves the rest on your machine. Scroll to watch it happen.</p>
       <ul class="priv-list">
         <li><i style="background:#3a4170"></i><span>Images, assets and compiled code stay on your computer.</span></li>
-        <li><i style="background:var(--acc)"></i><span>Only Info.plist, privacy manifests and binary headers are uploaded, then discarded after the scan.</span></li>
+        <li><i style="background:var(--acc)"></i><span>Only Info.plist, privacy manifests and binary headers (library and symbol names) are uploaded, then discarded after the scan.</span></li>
       </ul>
       <div class="meter">uploaded <b>45.8 MB</b> of a 45.8 MB test build</div>
     </div>
@@ -467,7 +467,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
     <div class="plan hot tilt reveal">
       <span class="badge">Before you submit</span>
       <h3>Full AI review</h3><div class="price pr" data-price="{{PRICE_REVIEW}}">{{PRICE_REVIEW}}</div><div class="per">per app version · instant</div>
-      <ul><li>Everything in the free scan</li><li>14 App Store Connect checks: demo account, account deletion, Sign in with Apple, in-app purchase, subscriptions, privacy, kids, tracking, web wrappers</li><li>Description check for wording reviewers flag</li><li>One fix list ordered by rejection risk, with the guideline for each</li></ul>
+      <ul><li>Everything in the free scan</li><li>21 App Store Connect checks: demo account, login walls, account deletion, Sign in with Apple, in-app purchase, subscriptions, privacy, kids, tracking, web wrappers</li><li>Description check for wording reviewers flag</li><li>One fix list ordered by rejection risk, with the guideline for each</li></ul>
       <button class="btn order" data-plan="review" type="button">Start my review</button>
     </div>
     <div class="plan tilt reveal">
@@ -503,7 +503,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   <div class="dlg-actions"><button class="btn ghost sm" id="wz-back" type="button">Back</button><button class="btn sm" id="wz-next" type="button">Next</button></div>
 </div></dialog>
 
-<div id="dropall" aria-hidden="true"><div class="ring"><div><b>Drop to scan</b><span>Your code stays on this device</span></div></div></div>
+<div id="dropall" aria-hidden="true"><div class="ring"><div><b>Drop to scan</b><span>Your compiled code stays on this device</span></div></div></div>
 <div id="rovy" hidden>
   <div class="rovy-bubble" role="status" aria-live="polite"><div class="rovy-count">Rovy</div><div class="rovy-text"></div>
     <div class="rovy-actions"><button class="rovy-next" type="button">Next tip →</button><button class="rovy-close" type="button" aria-label="Hide tips">×</button></div></div>

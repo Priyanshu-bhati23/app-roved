@@ -69,7 +69,7 @@
       vrx: (Math.random() - 0.5) * 0.25, vry: (Math.random() - 0.5) * 0.35,
       bob: Math.random() * 6.3,
       off: new THREE.Vector3(), vel: new THREE.Vector3(), spin: 0,
-      base, glow: 0,
+      base, glow: 0, dim: 0,
     });
     mesh.setColorAt(i, base);
   }
@@ -119,6 +119,29 @@
   addEventListener("resize", resize);
   resize();
 
+  // ---------- keep text readable ----------
+  // Icons that drift behind text fade toward the background and shrink. Text boxes are re-measured
+  // every few frames (cheap: only elements on screen are kept).
+  // Phones are mostly text edge to edge, so there only headlines dim, and less, to keep the field alive.
+  const TEXT = mobile ? "h1,h2,.kicker,.price" : "h1,h2,h3,h4,p,li,summary,label,.kicker,.price,.per,.pr,.lede,.sub,.btn,.drop,.vcard,.th-checks";
+  const DIM = mobile ? 0.55 : 0.82;
+  let textEls = [], rects = [], measuredAt = -1;
+  function collectText() { textEls = [...document.querySelectorAll(TEXT)]; }
+  collectText();
+  setTimeout(collectText, 1500);
+  new MutationObserver(() => { clearTimeout(collectText.t); collectText.t = setTimeout(collectText, 300); }).observe(document.body, { childList: true, subtree: true });
+  function measure() {
+    rects = [];
+    for (const el of textEls) {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height && r.bottom > 0 && r.top < innerHeight) rects.push(r);
+    }
+  }
+  function behindText(x, y, pad) {
+    for (const r of rects) if (x > r.left - pad && x < r.right + pad && y > r.top - pad && y < r.bottom + pad) return true;
+    return false;
+  }
+
   // ---------- loop ----------
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e3 = new THREE.Euler(), pos = new THREE.Vector3(), sc = new THREE.Vector3(), v = new THREE.Vector3();
   const tint = new THREE.Color(), white = new THREE.Color(0xdff6ff);
@@ -150,6 +173,7 @@
       flash.position.copy(camera.position).addScaledVector(v, 10);
     }
 
+    if (tick - measuredAt >= 8 || tick < measuredAt) { measure(); measuredAt = tick; }
     const aspect = camera.aspect;
     for (let i = 0; i < COUNT; i++) {
       const k = icons[i];
@@ -198,14 +222,18 @@
       k.ry += (k.vry * m + k.spin + scrollKick * (k.vry > 0 ? 1 : -1)) * dt;
       k.spin *= Math.pow(0.25, dt);
       k.glow = Math.max(k.glow * Math.pow(0.2, dt), near * 0.85);
+      // roughly the icon's on-screen radius, so a corner poking under a word counts too
+      const px = (k.size * 0.6 * innerHeight) / (2 * hh);
+      const covered = behindText(sx, sy, px) ? 1 : 0;
+      k.dim += (covered - k.dim) * Math.min(1, dt * 5);
 
       // the whole field leans toward the pointer
       e3.set(k.rx - pointer.ny * 0.6 * m, k.ry + pointer.nx * 0.8 * m, k.rz);
       q.setFromEuler(e3);
-      sc.setScalar(k.size * (1 + k.glow * 0.18));
+      sc.setScalar(k.size * (1 + k.glow * 0.18) * (1 - k.dim * DIM * 0.4));
       m4.compose(pos.add(k.off), q, sc);
       mesh.setMatrixAt(i, m4);
-      tint.copy(k.base).lerp(white, k.glow * 0.7);
+      tint.copy(k.base).lerp(white, k.glow * 0.7 * (1 - k.dim * DIM)).multiplyScalar(1 - k.dim * DIM);
       mesh.setColorAt(i, tint);
     }
     while (waves.length && now - waves[0].t > 1700) waves.shift();
@@ -229,6 +257,6 @@
     }
   }
   window.__bg3dLevel = () => level;
-  window.__bg3dIcons = () => icons.map((k, i) => { mesh.getMatrixAt(i, m4); pos.setFromMatrixPosition(m4).project(camera); return [(pos.x * 0.5 + 0.5) * innerWidth, (-pos.y * 0.5 + 0.5) * innerHeight, k.glow]; });
+  window.__bg3dIcons = () => icons.map((k, i) => { mesh.getMatrixAt(i, m4); pos.setFromMatrixPosition(m4).project(camera); return [(pos.x * 0.5 + 0.5) * innerWidth, (-pos.y * 0.5 + 0.5) * innerHeight, k.glow, k.dim]; });
   requestAnimationFrame(frame);
 })();
