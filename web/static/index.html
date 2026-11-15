@@ -209,6 +209,9 @@ dialog#dlg{width:min(640px,calc(100vw - 20px))}
 .rv-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .rv-disc{color:var(--faint);font-size:12px;margin-top:12px}
 .pr .was{display:block;font:500 14px "JetBrains Mono",monospace;color:var(--faint);letter-spacing:0}
+.ripple{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:2px solid rgba(95,212,255,.9);box-shadow:0 0 30px rgba(95,212,255,.6),inset 0 0 20px rgba(155,107,255,.5);pointer-events:none;z-index:2;animation:ripple 1s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes ripple{to{transform:scale(22);opacity:0;border-width:1px}}
+@media (prefers-reduced-motion:reduce){.ripple{animation-duration:.5s}}
 /* Rovy, the tip-dropping mascot */
 #rovy{position:fixed;right:14px;bottom:10px;z-index:30;display:flex;align-items:flex-end;gap:6px;pointer-events:none;transition:opacity .3s,transform .3s}
 #rovy[hidden]{display:none}

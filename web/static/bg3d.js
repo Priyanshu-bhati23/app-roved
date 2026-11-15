@@ -60,7 +60,8 @@
     const z = -8 - Math.random() * 20;
     const base = new THREE.Color(PALETTE[i % PALETTE.length]).multiplyScalar(0.75);
     icons.push({
-      x: (Math.random() - 0.5) * 2, // fraction of the visible width at its depth
+      // fraction of the visible width at its depth; most icons sit toward the sides so text stays clear
+      x: Math.random() < 0.75 ? (Math.random() < 0.5 ? -1 : 1) * (0.42 + Math.random() * 0.62) : (Math.random() - 0.5) * 2,
       y: Math.random() * SPAN,
       z,
       size: 0.55 + Math.random() * 0.75,
@@ -76,21 +77,39 @@
   // ---------- input ----------
   const pointer = { x: 0, y: 0, nx: 0, ny: 0, on: false };
   const waves = [];
-  addEventListener("pointermove", e => {
-    pointer.x = e.clientX; pointer.y = e.clientY;
-    pointer.nx = (e.clientX / innerWidth) * 2 - 1; pointer.ny = -(e.clientY / innerHeight) * 2 + 1;
+  let offTimer = 0;
+  function aim(x, y) {
+    pointer.x = x; pointer.y = y;
+    pointer.nx = (x / innerWidth) * 2 - 1; pointer.ny = -(y / innerHeight) * 2 + 1;
     pointer.on = true;
-  }, { passive: true });
+    clearTimeout(offTimer);
+  }
+  addEventListener("pointermove", e => aim(e.clientX, e.clientY), { passive: true });
   document.addEventListener("pointerleave", () => { pointer.on = false; });
-  const INTERACTIVE = "a,button,input,textarea,select,label,summary,details,dialog,.scanner,.flip,.plan,.qcard,.stage,#rovy,.f,.group,nav";
-  addEventListener("pointerdown", e => {
-    if (e.target.closest && e.target.closest(INTERACTIVE)) return;
+  // phones: a finger moving across the screen (also while scrolling) pushes icons and carries the light
+  addEventListener("touchstart", e => { const t = e.touches[0]; if (t) aim(t.clientX, t.clientY); }, { passive: true });
+  addEventListener("touchmove", e => { const t = e.touches[0]; if (t) aim(t.clientX, t.clientY); }, { passive: true });
+  addEventListener("touchend", () => { offTimer = setTimeout(() => { pointer.on = false; }, 700); }, { passive: true });
+  // a click or tap anywhere that isn't a control sends a shockwave (scrolling doesn't fire click)
+  const CONTROLS = "a,button,input,textarea,select,summary,dialog,.stage,#rovy,.yn";
+  document.addEventListener("click", e => {
+    if (e.target.closest && e.target.closest(CONTROLS)) return;
     if (window.getSelection && String(getSelection()).length) return;
-    waves.push({ x: e.clientX, y: e.clientY, t: performance.now() });
-    flash.intensity = 6;
+    wave(e.clientX, e.clientY);
+  });
+  function wave(x, y) {
+    waves.push({ x, y, t: performance.now() });
     if (waves.length > 4) waves.shift();
-  }, { passive: true });
-  if (mobile) addEventListener("touchend", () => { pointer.on = false; }, { passive: true });
+    flash.intensity = 7;
+    const ring = document.createElement("i");
+    ring.className = "ripple";
+    ring.style.left = x + "px"; ring.style.top = y + "px";
+    document.body.appendChild(ring);
+    setTimeout(() => ring.remove(), 1100);
+  }
+  // scrolling makes the field spin, faster scrolls spin it harder
+  let lastScroll = scrollY, scrollKick = 0;
+  addEventListener("scroll", () => { scrollKick = Math.min(6, scrollKick + Math.abs(scrollY - lastScroll) * 0.012); lastScroll = scrollY; }, { passive: true });
 
   function resize() {
     renderer.setSize(innerWidth, innerHeight, false);
@@ -147,10 +166,10 @@
       // pointer: push away and glow
       let near = 0;
       if (pointer.on && m) {
-        const dx = sx - pointer.x, dy = sy - pointer.y, d = Math.hypot(dx, dy), R = mobile ? 150 : 220;
+        const dx = sx - pointer.x, dy = sy - pointer.y, d = Math.hypot(dx, dy), R = mobile ? 190 : 260;
         if (d < R) {
           near = 1 - d / R;
-          const f = near * near * 0.9 * (depth / 12);
+          const f = near * near * 1.7 * (depth / 12);
           k.vel.x += (dx / (d || 1)) * f * dt * 9;
           k.vel.y -= (dy / (d || 1)) * f * dt * 9;
           k.spin += near * dt * 2.2;
@@ -161,8 +180,8 @@
         const age = (now - w.t) / 1000, radius = age * 900;
         if (age > 1.6) continue;
         const dx = sx - w.x, dy = sy - w.y, d = Math.hypot(dx, dy);
-        if (Math.abs(d - radius) < 70) {
-          const f = (1 - age / 1.6) * 0.5 * (depth / 12);
+        if (Math.abs(d - radius) < 110) {
+          const f = (1 - age / 1.6) * 0.9 * (depth / 12);
           k.vel.x += (dx / (d || 1)) * f;
           k.vel.y -= (dy / (d || 1)) * f;
           k.vel.z += f * 0.8;
@@ -175,12 +194,13 @@
       k.vel.multiplyScalar(Math.pow(0.04, dt));
       k.off.addScaledVector(k.vel, dt * 3);
 
-      k.rx += (k.vrx * m + k.spin * 0.6) * dt;
-      k.ry += (k.vry * m + k.spin) * dt;
+      k.rx += (k.vrx * m + k.spin * 0.6 + scrollKick * 0.5 * k.vrx * 8) * dt;
+      k.ry += (k.vry * m + k.spin + scrollKick * (k.vry > 0 ? 1 : -1)) * dt;
       k.spin *= Math.pow(0.25, dt);
       k.glow = Math.max(k.glow * Math.pow(0.2, dt), near * 0.85);
 
-      e3.set(k.rx + pointer.ny * 0.3 * m, k.ry + pointer.nx * 0.4 * m, k.rz);
+      // the whole field leans toward the pointer
+      e3.set(k.rx - pointer.ny * 0.6 * m, k.ry + pointer.nx * 0.8 * m, k.rz);
       q.setFromEuler(e3);
       sc.setScalar(k.size * (1 + k.glow * 0.18));
       m4.compose(pos.add(k.off), q, sc);
@@ -189,13 +209,15 @@
       mesh.setColorAt(i, tint);
     }
     while (waves.length && now - waves[0].t > 1700) waves.shift();
+    scrollKick *= Math.pow(0.08, dt);
     mesh.instanceMatrix.needsUpdate = true;
     mesh.instanceColor.needsUpdate = true;
 
     // reduced motion: render only when something changed
     if (reduced) {
-      if (Math.abs(targetY - camY) < 1e-4 && ++stillFrames > 2) return;
-      if (Math.abs(targetY - camY) >= 1e-4) stillFrames = 0;
+      const busy = Math.abs(targetY - camY) >= 1e-4 || waves.length || pointer.on;
+      if (!busy && ++stillFrames > 2) return;
+      if (busy) stillFrames = 0;
     }
     renderer.render(scene, camera);
     frames++;
