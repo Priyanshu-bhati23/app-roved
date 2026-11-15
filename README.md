@@ -38,6 +38,12 @@ each .ipa in the browser first (`web/static/slim.js`): it keeps Info.plist, priv
 header, load commands, symbol strings and code signature, and drops compiled code and assets. A 48 MB test build
 becomes about 2.5 KB and produces an identical report (`tests/test_slim.py`).
 
+The full review and the rejection rescue are automated (`approved/review.py`, `POST /v1/review`): fourteen
+App Store Connect rules run on the developer's yes/no answers and their App Store description
+(`data/setup_signals.yaml`), build findings are merged in, and a rejection message is mapped to guideline
+sections in `data/knowledge/guidelines.md` (written in our own words, linked to Apple's guidelines). An LLM
+may rephrase the rescue, but its answer is dropped if it cites anything that was not retrieved.
+
 The site is configured with environment variables: `CONTACT_EMAIL`, `ORDER_WEBHOOK_URL` (a Discord or Slack
 webhook that receives each order), `PAY_URL_REVIEW`, `PAY_URL_RESCUE`, `PRICE_REVIEW`, `PRICE_RESCUE` and
 `LAUNCH_NOTE`. See `web/app.py`.

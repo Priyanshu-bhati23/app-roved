@@ -33,6 +33,7 @@ from approved import ipa, llm, rag
 from approved.api import _settings, app
 from approved.catalog import Report
 from approved.engine import analyze
+from approved.review import AppProfile, Review, build_review
 
 log = logging.getLogger("approved.web")
 STATIC = Path(__file__).resolve().parent / "static"
@@ -46,6 +47,7 @@ def config() -> dict[str, str]:
         "price_rescue": os.getenv("PRICE_RESCUE", "$79"),
         "launch_note": os.getenv("LAUNCH_NOTE", ""),
         "orders_open": "1" if os.getenv("ORDER_WEBHOOK_URL") else "",
+        "beta_free": "" if os.getenv("REVIEWS_PAID") else "1",
     }
 
 
@@ -73,7 +75,7 @@ def page() -> str:
     return text
 
 
-SCRIPTS = ("slim.js", "phone3d.js", "theater.js", "mascot.js", "bg3d.js", "site3d.js")
+SCRIPTS = ("slim.js", "phone3d.js", "theater.js", "mascot.js", "bg3d.js", "site3d.js", "review-ui.js")
 
 
 @app.get("/{name}.js", include_in_schema=False)
@@ -214,3 +216,54 @@ def create_order(order: Order, request: Request) -> dict:
         log.error("order webhook failed: %s", exc)
         raise HTTPException(502, f"Couldn't send your request. Please email {contact or 'us'}.") from exc
     return {"ok": True, "pay_url": os.getenv("PAY_URL_" + order.plan.upper(), "")}
+
+
+# --- automated review -------------------------------------------------------------------------
+
+
+class ReviewRequest(BaseModel):
+    plan: Literal["review", "rescue"]
+    profile: AppProfile | None = None
+    scan: Report | None = None
+    rejection: str = Field(default="", max_length=6000)
+    email: str = Field(default="", max_length=200)
+    website: str = Field(default="", max_length=200)  # honeypot
+
+
+_review_hits: dict[str, deque] = {}
+MAX_REVIEWS_PER_HOUR = 12
+
+
+@app.post("/v1/review", response_model=Review, include_in_schema=False)
+def create_review(req: ReviewRequest, request: Request) -> Review:
+    if req.website:
+        raise HTTPException(400, "Bad request.")
+    if req.plan == "rescue" and not req.rejection.strip():
+        raise HTTPException(422, "Paste the message from App Review so we can work out what it means.")
+    if req.plan == "review" and req.profile is None:
+        raise HTTPException(422, "Answer the questions about your app first.")
+    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0]
+    now, hits = time.time(), _review_hits.setdefault(ip, deque())
+    while hits and now - hits[0] > 3600:
+        hits.popleft()
+    hits.append(now)
+    if len(hits) > MAX_REVIEWS_PER_HOUR:
+        raise HTTPException(429, "Too many reviews from this connection. Try again in an hour.")
+    review = build_review(req.scan, req.profile, req.rejection or None, llm.from_env())
+    _notify_lead(req, review)
+    return review
+
+
+def _notify_lead(req: ReviewRequest, review: Review) -> None:
+    """Best effort: tell the owner a review was generated (who, which plan, the headline)."""
+    webhook = os.getenv("ORDER_WEBHOOK_URL", "")
+    if not webhook:
+        return
+    who = req.email.strip() if EMAIL_RE.match(req.email.strip() or "x") else "no email given"
+    app_name = req.scan.app_name if req.scan else "no build scanned"
+    text = f"Automated {PLANS[req.plan].lower()} generated ({app_name}): {review.headline}. Contact: {who}"[:1900]
+    payload = {"text": text} if "hooks.slack.com" in webhook else {"content": text, "allowed_mentions": {"parse": []}}
+    try:
+        httpx.post(webhook, json=payload, timeout=4)
+    except httpx.HTTPError:
+        log.warning("lead webhook failed")

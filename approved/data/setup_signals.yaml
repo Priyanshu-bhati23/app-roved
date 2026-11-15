@@ -1,0 +1,127 @@
+# App Store Connect and app-behaviour checks. These run on the developer's answers and their
+# App Store description, not on the build. Same rules as signals.yaml: OFFICIAL needs an Apple source.
+
+- id: SETUP-001
+  title: Login required but no demo account for the reviewer
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The app needs a login, but no demo account is set up for App Review (guideline 2.1). Reviewers who cannot get in reject the build.
+  remediation: In App Store Connect, open the version, App Review Information, and enter a working username and password (or explain a demo mode) plus short notes on how to reach the main features.
+
+- id: SETUP-002
+  title: Accounts can be created but not deleted in the app
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps that let people create an account must let them start deleting it from inside the app (guideline 5.1.1).
+  remediation: Add a clearly labelled Delete Account option in the app's settings that deletes the account and its data, not just a link to email support.
+
+- id: SETUP-003
+  title: Social login without a privacy-focused login option
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The app offers a third-party login such as Google or Facebook but no equivalent privacy-focused option (guideline 4.8).
+  remediation: Add Sign in with Apple, or another login that limits data to name and email, lets people hide their email and does not track them.
+
+- id: SETUP-004
+  title: Digital content sold without in-app purchase
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The app sells digital content or features but not through in-app purchase (guideline 3.1.1).
+  remediation: Sell digital goods, premium features and subscriptions through StoreKit in-app purchase. Check 3.1.1 and 3.1.3 for the rules on external purchase links in each country you launch in.
+
+- id: SETUP-005
+  title: Subscription without Terms of Use and privacy links
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps with auto-renewing subscriptions need working links to the Terms of Use (EULA) and the privacy policy in the App Store metadata (guideline 3.1.2).
+  remediation: Link Apple's standard EULA in the App Description or add a custom EULA in App Store Connect, add the privacy policy URL, and show both on the subscription screen.
+
+- id: SETUP-006
+  title: No privacy policy link
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Every app needs a privacy policy link in App Store Connect and an easy way to reach it inside the app (guideline 5.1.1).
+  remediation: Publish a privacy policy page, add its URL in App Store Connect under App Privacy, and link it from the app's settings.
+
+- id: SETUP-007
+  title: User-generated content without report and block tools
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps where people post content or message each other need filtering, a way to report content, a way to block users and published contact details (guideline 1.2).
+  remediation: Add Report and Block actions on posts and profiles, filter objectionable content, act on reports quickly and list a contact address.
+
+- id: SETUP-008
+  title: Kids category app with third-party ads or analytics
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps in the Kids category generally cannot include third-party advertising or analytics (guideline 1.3).
+  remediation: Remove third-party ad and analytics SDKs from the Kids build, or move the app out of the Kids category if it is not made for children.
+
+- id: SETUP-009
+  title: Tracking without App Tracking Transparency
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Tracking people across other companies' apps and websites requires asking permission through App Tracking Transparency (guideline 5.1.2).
+  remediation: Request permission with ATTrackingManager before any tracking, add NSUserTrackingUsageDescription, and make your App Privacy answers say the data is used for tracking.
+
+- id: SETUP-010
+  title: Mostly a website in an app
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps that mostly show a website are often rejected for minimum functionality (guideline 4.2).
+  remediation: Add features that only make sense in an app, such as offline use, notifications, widgets or device features, and show them in the screenshots and review notes.
+
+- id: SETUP-011
+  title: Description mentions another platform
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The App Store description mentions another mobile platform such as Android or Google Play (guideline 2.3.10).
+  remediation: Remove references to other platforms from the name, subtitle, keywords, description, screenshots and release notes.
+
+- id: SETUP-012
+  title: Description calls the app a beta, demo or unfinished
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Words like beta, test version, demo or coming soon suggest the app is not finished (guidelines 2.1 and 2.2).
+  remediation: Ship only finished features, use TestFlight for testing, and remove beta and coming-soon wording from the app and its metadata.
+
+- id: SETUP-013
+  title: Placeholder text in the description
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The description contains placeholder text (guideline 2.3).
+  remediation: Replace placeholder text with a real description of what the app does.
+
+- id: SETUP-014
+  title: No review notes for a feature the reviewer may not find
+  severity: info
+  provenance: COMMUNITY_HEURISTIC
+  detection: heuristic
+  summary: Developers widely report fewer rejections when hard-to-reach features, hardware requirements or special setup are explained in the review notes.
+  remediation: Add two or three lines in App Review Information explaining how to reach every main feature and anything the reviewer needs to test it.
