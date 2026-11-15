@@ -91,7 +91,7 @@ def test_rescue_keeps_a_grounded_llm_answer_and_drops_an_ungrounded_one():
     login = next(c.id for c in kb.chunks if c.title.startswith("4.8"))
     good = (
         f"MEANING: You need a privacy-focused login next to Google [{login}].\n"
-        "STEPS:\n- Add Sign in with Apple\n"
+        f"STEPS:\n- Add Sign in with Apple [{login}]\n"
         "REPLY: Hello, we added Sign in with Apple in build [x]."
     )
     help_ = rescue("Guideline 4.8 - Login Services", FakeLLM(good))

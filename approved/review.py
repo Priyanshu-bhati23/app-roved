@@ -274,7 +274,8 @@ def rescue(rejection: str, llm: LLM | None, kb: KnowledgeBase | None = None) -> 
     meaning, steps_raw, reply = s.get("MEANING", ""), s.get("STEPS", ""), s.get("REPLY", "")
     cited = list(dict.fromkeys(_CITE.findall(meaning)))
     allowed = {c.id for c in chunks}
-    steps = [ln.lstrip("-•* ").strip() for ln in steps_raw.splitlines() if ln.strip().lstrip("-•* ")]
+    steps = [_CITE.sub("", ln).lstrip("-•* ").strip(" \u202f") for ln in steps_raw.splitlines()]
+    steps = [st for st in steps if st]
     if not meaning or not cited or not set(cited) <= allowed or not steps or not reply or _CITE.search(reply):
         return _template_rescue(numbers, chunks)
     return RejectionHelp(
