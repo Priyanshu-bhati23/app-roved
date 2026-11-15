@@ -121,6 +121,58 @@ details[open] p{animation:unfold .5s cubic-bezier(.2,.8,.2,1);transform-origin:t
 @keyframes unfold{from{opacity:0;transform:perspective(700px) rotateX(-75deg)}to{opacity:1;transform:none}}
 details{transition:border-color .2s,transform .2s}details:hover{border-color:#34407a;transform:translateX(4px)}
 @media (prefers-reduced-motion:reduce){details[open] p{animation:none}.flip .inner,.qcard{transition:none}}
+/* ---------- scan theater ---------- */
+#theater{position:relative;margin-top:18px;border:1px solid var(--line);border-radius:18px;background:rgba(7,8,15,.62);padding:18px;overflow:hidden}
+#theater[hidden]{display:none}
+.th-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.th-name{font:700 18px "Inter Tight",sans-serif;word-break:break-all}.th-size{font:13px "JetBrains Mono",monospace;color:var(--faint)}
+.th-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 16px}
+.th-step{font:500 12px "JetBrains Mono",monospace;color:var(--faint);border-top:3px solid var(--line);padding-top:8px;transition:color .3s,border-color .3s}
+.th-step.on{color:var(--acc);border-color:var(--acc)}.th-step.done{color:var(--ok);border-color:var(--ok)}
+.th-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+@media (max-width:800px){.th-grid{grid-template-columns:1fr}}
+.th-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;perspective:900px;min-height:90px}
+.tile{opacity:0;transform:translateY(18px) rotateX(-50deg);transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .4s,filter .5s,background .4s,border-color .4s,box-shadow .4s;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg2);font:11px/1.35 "JetBrains Mono",monospace;overflow:hidden}
+.tile.in{opacity:1;transform:none}
+.tile em{display:block;font-style:normal;font-size:16px;color:var(--muted);margin-bottom:2px}
+.tile span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.tile small{color:var(--faint)}
+.tile.go{border-color:var(--acc);background:linear-gradient(135deg,rgba(95,212,255,.28),rgba(59,130,246,.14));box-shadow:0 0 22px rgba(95,212,255,.35);transform:translateY(-8px) scale(1.04)}
+.tile.go em{color:var(--acc)}
+.tile.stay{opacity:.32;filter:grayscale(1)}
+.tile.stay small:after{content:" · stays local"}
+.th-more{font:12px "JetBrains Mono",monospace;color:var(--faint);margin-top:8px}
+.th-meter{display:flex;align-items:baseline;gap:10px;margin-top:12px;font:12px "JetBrains Mono",monospace;color:var(--muted);min-height:34px}
+.th-meter b{font:800 28px "Inter Tight",sans-serif;color:var(--ink);letter-spacing:-.02em}
+.th-note{font-size:13px;color:var(--muted);margin-top:6px}
+.th-empty{grid-column:1/-1;color:var(--muted);font-size:14px;padding:16px;border:1px dashed var(--line);border-radius:12px}
+.th-checks{list-style:none;padding:0;margin:0;display:grid;gap:3px;max-height:440px;overflow:auto}
+.th-checks li{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--faint);padding:5px 8px;border-radius:8px;transition:background .3s,color .3s}
+.th-checks li i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font:normal 800 10px "Inter Tight",sans-serif;color:#03141c;transition:background .25s,border-color .25s,transform .25s}
+.checking .th-checks li{animation:scanrow 1.8s ease-in-out infinite;animation-delay:calc(var(--i) * 70ms)}
+@keyframes scanrow{0%,100%{background:transparent}12%{background:rgba(95,212,255,.10);color:var(--ink)}}
+.th-checks li.pass{color:var(--muted)}.th-checks li.pass b{color:var(--ok)}.th-checks li.pass i{border-color:var(--ok);background:var(--ok);transform:scale(1.1)}.th-checks li.pass i:after{content:"✓"}
+.th-checks li.fail{background:rgba(255,93,115,.08);color:var(--ink)}.th-checks li.fail i{border-color:var(--sev);background:var(--sev);transform:scale(1.15)}.th-checks li.fail i:after{content:"!"}
+.th-checks li b{margin-left:auto;font:500 11px "JetBrains Mono",monospace;color:var(--sev);text-transform:uppercase}
+.th-verdict .vcard{margin-top:16px;padding:20px;border-radius:16px;text-align:center;border:1px solid var(--line);background:var(--bg2);transform:perspective(900px) rotateX(-85deg);transform-origin:top;opacity:0;transition:transform .8s cubic-bezier(.2,1.3,.4,1),opacity .4s}
+.finished .th-verdict .vcard{transform:none;opacity:1}
+.vcard small{font:500 12px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.vcard strong{display:block;font:800 clamp(34px,6vw,52px) "Inter Tight",sans-serif;letter-spacing:-.02em;margin:4px 0 8px}
+.vcounts{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:15px}.vcounts b{font-size:22px;color:var(--ink)}
+.vcard p{margin:10px 0 0;color:var(--faint);font-size:13px}
+.v-blocked .vcard{border-color:rgba(255,93,115,.5);background:linear-gradient(160deg,rgba(255,93,115,.14),var(--bg2))}.v-blocked strong{color:var(--block)}
+.v-needs_review .vcard{border-color:rgba(255,181,71,.5);background:linear-gradient(160deg,rgba(255,181,71,.12),var(--bg2))}.v-needs_review strong{color:var(--warn)}
+.v-clear .vcard{border-color:rgba(79,227,161,.5);background:linear-gradient(160deg,rgba(79,227,161,.14),var(--bg2))}.v-clear strong{color:var(--ok)}
+#theater.shake{animation:shake .6s}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.confetti{position:absolute;inset:0;pointer-events:none;z-index:5}
+#dropall{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(3,4,10,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none;opacity:0;transition:opacity .2s}
+#dropall.on{opacity:1}
+#dropall .ring{width:min(420px,80vw);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;text-align:center;border:2px dashed var(--acc);box-shadow:0 0 80px rgba(95,212,255,.35),inset 0 0 60px rgba(95,212,255,.15);animation:ringspin 8s linear infinite}
+#dropall .ring div{animation:ringspin 8s linear infinite reverse}
+#dropall b{display:block;font:800 34px "Inter Tight",sans-serif}#dropall span{color:var(--muted);font-size:15px}
+@keyframes ringspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#dropall .ring,#dropall .ring div,.checking .th-checks li{animation:none}}
 /* Rovy, the tip-dropping mascot */
 #rovy{position:fixed;right:14px;bottom:10px;z-index:30;display:flex;align-items:flex-end;gap:6px;pointer-events:none;transition:opacity .3s,transform .3s}
 #rovy[hidden]{display:none}
@@ -258,7 +310,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
       <span class="eyebrow">For iOS developers about to hit Submit</span>
       <h1>Catch the App Store rejection <em>before</em> Apple does.</h1>
       <p class="lede">Drop your .ipa and see what App Review will flag: a missing privacy manifest, empty permission strings, a development-signed build, an outdated SDK. Every finding comes with the Apple rule it comes from.</p>
-      <div class="hero-cta"><a class="btn mag" href="#scan">Scan my build, free</a><button class="btn ghost mag" id="sample-top" type="button">Watch a sample scan</button></div>
+      <div class="hero-cta"><button class="btn mag" id="pick" type="button">Scan my build, free</button><button class="btn ghost mag" id="sample-top" type="button">Watch a sample scan</button></div>
     </div>
     <div class="stage" id="stage" aria-label="Interactive 3D phone. Drag to spin."><canvas id="phone3d"></canvas><div class="chips" id="chips"></div><div class="stage-hint" id="stage-hint">Drag to spin</div></div>
   </div>
@@ -267,13 +319,22 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
     <label class="drop" id="drop">
       <input id="file" type="file" accept=".ipa">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-      <b>Drop your .ipa here, or click to choose</b>
-      <span>Any size. Free, no sign-up.</span>
+      <b>Drop your .ipa anywhere on this page, or click to choose</b>
+      <span>You can also paste it (Ctrl/⌘ + V). Any size. Free, no sign-up.</span>
     </label>
     <div class="srow">
       <div class="privacy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         <span>Your code never leaves your computer. Your browser trims the build down to its Info.plist, privacy manifests and binary headers, and only that small file is uploaded. It isn't stored.</span></div>
       <button class="btn ghost sm" id="sample" type="button">No build handy? Try a sample</button>
+    </div>
+    <div id="theater" hidden aria-live="polite">
+      <div class="th-head"><span class="th-name"></span><span class="th-size"></span></div>
+      <div class="th-steps"><div class="th-step">1 · Unpack</div><div class="th-step">2 · Trim</div><div class="th-step">3 · Check</div><div class="th-step">4 · Verdict</div></div>
+      <div class="th-grid">
+        <div><div class="th-tiles"></div><div class="th-more"></div><div class="th-meter"></div><div class="th-note"></div></div>
+        <ol class="th-checks"></ol>
+      </div>
+      <div class="th-verdict"></div>
     </div>
     <div class="progress" id="progress" aria-live="polite"></div>
     <div id="report"></div>
@@ -408,6 +469,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   <div class="dlg-actions"><button class="btn ghost sm" type="button" id="cancel">Cancel</button><button class="btn sm" type="submit" id="send">Send request</button></div>
 </form></dialog>
 
+<div id="dropall" aria-hidden="true"><div class="ring"><div><b>Drop to scan</b><span>Your code stays on this device</span></div></div></div>
 <div id="rovy" hidden>
   <div class="rovy-bubble" role="status" aria-live="polite"><div class="rovy-count">Rovy</div><div class="rovy-text"></div>
     <div class="rovy-actions"><button class="rovy-next" type="button">Next tip →</button><button class="rovy-close" type="button" aria-label="Hide tips">×</button></div></div>
@@ -416,6 +478,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 <script src="/slim.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/phone3d.js"></script>
+<script src="/theater.js"></script>
 <script src="/mascot.js"></script>
 <script src="/bg3d.js"></script>
 <script src="/site3d.js"></script>
@@ -454,30 +517,46 @@ async function post(url, opts) {
   return d;
 }
 
+const TH = new Proxy({}, {get: (_, k) => (...a) => { try { const t = window.Theater; return t && t[k] ? t[k](...a) : undefined; } catch (e) { console.warn(e); } }});
+
 async function scanFile(f) {
   if (!f) return;
   if (!/\.ipa$/i.test(f.name)) { say('<span class="err">Please choose an .ipa file (Xcode → Product → Archive → Distribute App → Export).</span>'); return; }
+  if ($("file").disabled) return; // a scan is already running
   busy(true); $("report").innerHTML = ""; lastReport = null;
   try {
     P3.scanning(f.name);
-    say("Opening <b>" + esc(f.name) + "</b> (" + mb(f.size) + ") in your browser…");
+    TH.start(f.name, f.size);
+    say("Opening <b>" + esc(f.name) + "</b> in your browser…");
     const JSZip = await loadJSZip();
-    const slim = await AppRovedSlim.slimIPA(f, JSZip, step => say("Trimming in your browser: <b>" + esc(step) + "</b>"));
+    let shown = Promise.resolve();
+    const slim = await AppRovedSlim.slimIPA(f, JSZip, step => say("Trimming in your browser: <b>" + esc(step) + "</b>"), undefined,
+      list => { shown = Promise.resolve(TH.files(list)); });
+    await shown;
     if (slim.slimBytes > 4 * 1024 * 1024) throw new Error("This build is unusually large even after trimming. Book a review and we'll scan it for you.");
-    say("Trimmed " + mb(slim.originalBytes) + " → <b>" + mb(slim.slimBytes) + "</b>. Uploading only that. Checking and writing explanations (about 10–20 s)…");
+    await TH.trimmed(slim.slimBytes, slim.originalBytes);
+    say("Uploaded " + mb(slim.slimBytes) + ". Running every check and writing explanations…");
+    TH.checking();
     const fd = new FormData(); fd.append("file", slim.blob, f.name);
-    render(await atLeast(2600, post("/v1/scans", {method:"POST", body:fd})));
+    const d = await atLeast(1500, post("/v1/scans", {method:"POST", body:fd}));
+    await TH.finish(d);
+    render(d);
     say("Scanned <b>" + esc(f.name) + "</b>. " + mb(slim.slimBytes) + " of " + mb(slim.originalBytes) + " left your computer.");
-  } catch (e) { say('<span class="err">' + esc(e.message || e) + '</span>'); P3.idle(); }
+  } catch (e) { say('<span class="err">' + esc(e.message || e) + '</span>'); TH.fail(e.message || String(e)); P3.idle(); }
   busy(false);
 }
 
 async function scanSample() {
+  if ($("file").disabled) return;
+  const q = render.quietNext; render.quietNext = false;
   busy(true); $("report").innerHTML = ""; lastReport = null;
   P3.scanning("Sample.ipa");
-  say("Scanning a sample build with six planted problems. Writing explanations (about 10–20 s)…");
-  try { const q = render.quietNext; render.quietNext = false; render(await atLeast(3200, post("/v1/demo-scan", {method:"POST"})), q); say("This is a sample build. Drop your own .ipa above to scan it."); }
-  catch (e) { say('<span class="err">' + esc(e.message) + '</span>'); P3.idle(); }
+  TH.start("Sample.ipa · test build with planted problems", 0, {scroll: !q});
+  TH.sampleNote();
+  say("Running every check on a sample build and writing explanations…");
+  TH.checking();
+  try { const d = await atLeast(2600, post("/v1/demo-scan", {method:"POST"})); await TH.finish(d); render(d, q); say("This is a sample build. Drop your own .ipa anywhere on the page to scan it."); }
+  catch (e) { say('<span class="err">' + esc(e.message) + '</span>'); TH.fail(e.message); P3.idle(); }
   busy(false);
 }
 
@@ -514,9 +593,23 @@ function summary() {
 
 $("file").onchange = () => scanFile($("file").files[0]);
 const drop = $("drop");
-drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
-drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); scanFile(e.dataTransfer.files[0]); });
+// drop an .ipa anywhere on the page, or paste it
+const dropall = $("dropall");
+let dragDepth = 0;
+const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files");
+addEventListener("dragenter", e => { if (!hasFiles(e)) return; dragDepth++; dropall.classList.add("on"); drop.classList.add("over"); });
+addEventListener("dragleave", e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; dropall.classList.remove("on"); drop.classList.remove("over"); } });
+addEventListener("dragover", e => { if (hasFiles(e)) e.preventDefault(); });
+addEventListener("drop", e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; dropall.classList.remove("on"); drop.classList.remove("over");
+  scanFile(e.dataTransfer.files[0]);
+});
+document.addEventListener("paste", e => {
+  const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /\.ipa$/i.test(x.name));
+  if (f) { e.preventDefault(); scanFile(f); }
+});
+$("pick").onclick = () => $("file").click();
 $("sample").onclick = scanSample;
 $("sample-top").onclick = () => { render.quietNext = true; scanSample(); };
 

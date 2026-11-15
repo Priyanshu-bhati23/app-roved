@@ -147,7 +147,7 @@
    * Read an .ipa (File/Blob/ArrayBuffer) with JSZip and build the slim IPA.
    * Resolves to { blob, appName, originalBytes, slimBytes, kept }. outputType is a JSZip type (default "blob").
    */
-  async function slimIPA(input, JSZip, onProgress, outputType) {
+  async function slimIPA(input, JSZip, onProgress, outputType, onFiles) {
     const say = onProgress || function () {};
     const zip = await JSZip.loadAsync(input);
     const names = Object.keys(zip.files);
@@ -162,13 +162,26 @@
     if (!appRoot) throw new Error("This doesn't look like an .ipa: there is no Payload/<Name>.app folder inside.");
 
     const out = new JSZip();
+    if (onFiles) {
+      // tell the page what is inside before the slow part starts (names and sizes only)
+      const pre = names.filter(n => !zip.files[n].dir && n.startsWith(appRoot)).map(n => {
+        const rest = n.slice(appRoot.length), e = zip.files[n];
+        return { name: rest, size: (e._data && e._data.uncompressedSize) || 0 };
+      });
+      try { onFiles(pre); } catch (e) { /* display only */ }
+    }
     const fwRe = new RegExp("^" + appRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "Frameworks/([^/]+)\\.framework/([^/]+)$");
     let kept = 0;
+    const listing = [];
     for (const name of names) {
       const entry = zip.files[name];
       if (entry.dir || !name.startsWith(appRoot)) continue;
       const rest = name.slice(appRoot.length);
       const fw = fwRe.exec(name);
+      const size = (entry._data && entry._data.uncompressedSize) || 0;
+      const keep = rest === "Info.plist" || name.endsWith("PrivacyInfo.xcprivacy") || rest === "embedded.mobileprovision" ||
+        (fw && fw[1] === fw[2]) || (!rest.includes("/") && !rest.includes("."));
+      listing.push({ name: rest, size, keep });
       if (rest === "Info.plist" || name.endsWith("PrivacyInfo.xcprivacy")) {
         out.file(name, await entry.async("uint8array"));
         kept++;
@@ -187,7 +200,7 @@
     say("Packing");
     const blob = await out.generateAsync({ type: outputType || "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
     const originalBytes = input.size != null ? input.size : input.byteLength;
-    return { blob, appName: appRoot.slice(8, -5), originalBytes, slimBytes: blob.size != null ? blob.size : blob.length, kept };
+    return { blob, appName: appRoot.slice(8, -5), originalBytes, slimBytes: blob.size != null ? blob.size : blob.length, kept, listing };
   }
 
   const api = { slimMachO, slimIPA, isMachO };
