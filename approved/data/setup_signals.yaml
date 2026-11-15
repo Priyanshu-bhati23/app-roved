@@ -125,3 +125,66 @@
   detection: heuristic
   summary: Developers widely report fewer rejections when hard-to-reach features, hardware requirements or special setup are explained in the review notes.
   remediation: Add two or three lines in App Review Information explaining how to reach every main feature and anything the reviewer needs to test it.
+
+- id: SETUP-015
+  title: Login required for features that do not need an account
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: The app makes people log in before they can try anything, but its main features do not depend on an account. Guideline 5.1.1(v) says apps without significant account-based features must let people use them without a login.
+  remediation: Let people use the app as a guest and ask for an account only at the point a feature really needs one, such as syncing across devices or a purchase tied to an account. If the app does depend on an account, explain why in the review notes.
+
+- id: SETUP-016
+  title: Account deletion is only deactivation or a support request
+  severity: blocker
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/support/offering-account-deletion-in-your-app
+  summary: Deleting an account must delete the account record and its personal data, including content the person shared. Only deactivating it is not enough, and apps outside highly regulated industries must not make people call, email or chat with support to delete (guideline 5.1.1(v)).
+  remediation: Make the in-app Delete Account option delete the account and its data, or link straight to the web page that finishes it. Confirmation steps are fine. Say how long deletion takes, confirm when it is done, and tell people what you must keep by law.
+
+- id: SETUP-017
+  title: Sign-up asks for personal details the app does not need
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps may not require personal information to work unless it is directly relevant to the core features or required by law (guideline 5.1.1(v)), and should only collect what a task needs (5.1.1(iii)).
+  remediation: Make extra fields such as phone number, birthday or address optional, or ask for them only in the feature that uses them.
+
+- id: SETUP-018
+  title: Social login without a way to disconnect it in the app
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Apps that use social network credentials must let people revoke them and stop data access between the app and the social network from inside the app, and must not store those tokens off the device (guideline 5.1.1(v)).
+  remediation: Add a Disconnect or Sign out of Google/Facebook option in settings that revokes the token, and keep social tokens on the device only.
+
+- id: SETUP-019
+  title: Sign in with Apple tokens not revoked when an account is deleted
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/support/offering-account-deletion-in-your-app
+  summary: Apple's account deletion requirements say apps using Sign in with Apple should revoke the user's tokens with the Sign in with Apple REST API when the account is deleted.
+  remediation: Call the revoke tokens endpoint of the Sign in with Apple REST API from your server as part of account deletion, and handle Apple's server-to-server notifications for account changes.
+
+- id: SETUP-020
+  title: Account deletion does not warn subscribers about billing
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/support/offering-account-deletion-in-your-app
+  summary: When someone with an auto-renewing subscription deletes their account, Apple asks apps to tell them billing continues through Apple and to cancel the subscription first.
+  remediation: In the delete flow, check for an active subscription, explain that billing continues until they cancel, and open the subscription management sheet (showManageSubscriptions) or link to it.
+
+- id: SETUP-021
+  title: Demo account cannot reach every feature
+  severity: warning
+  provenance: OFFICIAL
+  detection: exact
+  source: https://developer.apple.com/app-store/review/guidelines/
+  summary: Guideline 2.1 asks for a demo account or demo mode with full access to the app's features. A demo account that needs a two-factor code, an SMS, a specific location or a trial that expires leaves the reviewer stuck.
+  remediation: Give the demo account full access with no second factor, keep it active through review, and put any QR code, test card or hardware the reviewer needs in App Review Information.

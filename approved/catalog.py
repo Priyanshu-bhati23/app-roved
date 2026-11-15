@@ -72,6 +72,7 @@ class Report(BaseModel):
     verdict: str
     counts: dict[str, int]
     findings: list[Finding]
+    auth: dict = Field(default_factory=dict, description="Sign-in SDKs and Sign in with Apple seen in the build")
 
 
 class Catalog:

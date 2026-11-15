@@ -182,3 +182,21 @@
   source: null
   summary: The app links a remote-configuration SDK. It is often claimed that reviewers look harder at apps that can change behaviour after approval; nobody outside Apple can verify how review weighs this. Guideline 2.3.1 does prohibit hidden features, whatever mechanism toggles them.
   remediation: No action needed if every remotely toggled feature is disclosed in the review notes.
+
+- id: AUTH-001
+  title: Social login SDK without Sign in with Apple
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/app-store/review/guidelines/#login-services
+  summary: The build contains a third-party login SDK (such as Google Sign-In or Facebook Login) but no sign of Sign in with Apple or another private login. Guideline 4.8 requires an equivalent privacy-focused option when a social login sets up the main account. Exceptions exist, for example apps that only sign in to an existing enterprise, education or government account, or clients for a specific third-party service.
+  remediation: Add Sign in with Apple (or another login that limits data to name and email, lets people hide their email and does not track them) next to the social login. If the SDK is only used for sharing, or one of the 4.8 exceptions applies, say so in the review notes.
+
+- id: AUTH-002
+  title: Sign in with Apple used without its entitlement
+  severity: warning
+  provenance: OFFICIAL
+  detection: heuristic
+  source: https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.applesignin
+  summary: The binary references ASAuthorizationAppleIDProvider, but the signed entitlements have no com.apple.developer.applesignin. Without the capability the Sign in with Apple request fails, so the reviewer cannot sign in (guideline 2.1).
+  remediation: Add the Sign in with Apple capability to the app target, make sure the App ID and distribution profile include it, and re-export. If the reference only comes from an SDK you do not use for login, you can ignore this.

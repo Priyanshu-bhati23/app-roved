@@ -266,3 +266,62 @@ def remote_config(bundle, settings):
     hits = sorted(n for n in linked | embedded if any(lib.lower() in n.lower() for lib in REMOTE_CONFIG_LIBS))
     if hits:
         yield {"libraries": hits}
+
+
+# ---------- sign-in ----------
+
+# Login SDKs, matched by embedded framework/dylib name or by a class name in the symbol table
+# (statically linked SDKs leave no framework behind). Sharing-only SDKs such as FBSDKCoreKit
+# or FBSDKShareKit are deliberately not listed.
+SOCIAL_LOGIN_SDKS: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    "Google Sign-In": (("GoogleSignIn",), ("GIDSignIn",)),
+    "Facebook Login": (("FBSDKLoginKit",), ("FBSDKLoginManager", "FBSDKLoginKit")),
+    "Log in with X (Twitter)": (("TwitterKit",), ("TWTRTwitter",)),
+    "Login with Amazon": (("LoginWithAmazon",), ("AMZNAuthorizationManager",)),
+    "LINE Login": (("LineSDK",), ("LineSDKLoginManager",)),
+    "Kakao Login": (("KakaoSDKAuth",), ("KakaoSDKAuth",)),
+}
+SIWA_ENTITLEMENT = "com.apple.developer.applesignin"
+SIWA_CLASS = "ASAuthorizationAppleIDProvider"
+
+
+def _names(bundle: AppBundle) -> set[str]:
+    linked = {d.rsplit("/", 1)[-1] for b in bundle.binaries for d in b.image.primary.all_dylibs}
+    return linked | {b.path.rsplit("/", 1)[-1] for b in bundle.frameworks}
+
+
+def auth_summary(bundle: AppBundle) -> dict:
+    """What the build says about sign-in. Used by the checks below and to pre-fill the review."""
+    names = _names(bundle)
+    blob = "\n".join(s for b in bundle.binaries for s in b.image.primary.symbols)
+    social = {}
+    for label, (frameworks, classes) in SOCIAL_LOGIN_SDKS.items():
+        hit = sorted(n for n in names if n in frameworks)
+        if not hit:
+            hit = sorted(c for c in classes if c in blob)
+        if hit:
+            social[label] = hit
+    entitlements = bundle.executable.image.primary.entitlements
+    return {
+        "social_login_sdks": social,
+        "sign_in_with_apple": {
+            "used": SIWA_CLASS in blob,
+            "entitlement": bool(entitlements and SIWA_ENTITLEMENT in entitlements),
+            "entitlements_readable": entitlements is not None,
+        },
+    }
+
+
+@check("AUTH-001")
+def social_login_without_siwa(bundle, settings):
+    a = auth_summary(bundle)
+    siwa = a["sign_in_with_apple"]
+    if a["social_login_sdks"] and not (siwa["used"] or siwa["entitlement"]):
+        yield {"social_login_sdks": a["social_login_sdks"], "sign_in_with_apple": False}
+
+
+@check("AUTH-002")
+def siwa_without_entitlement(bundle, settings):
+    siwa = auth_summary(bundle)["sign_in_with_apple"]
+    if siwa["used"] and siwa["entitlements_readable"] and not siwa["entitlement"]:
+        yield {"references": SIWA_CLASS, "missing_entitlement": SIWA_ENTITLEMENT}

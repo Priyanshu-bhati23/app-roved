@@ -183,6 +183,7 @@ dialog#dlg{width:min(640px,calc(100vw - 20px))}
 #wz-body{perspective:1000px;max-height:min(62vh,560px);overflow:auto;padding:2px}
 .q{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--bg2);animation:qin .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 60ms)}
 @keyframes qin{from{opacity:0;transform:rotateX(-35deg) translateY(14px)}to{opacity:1;transform:none}}
+.q.detected{border-color:rgba(95,212,255,.45);background:rgba(95,212,255,.06)}.q.detected p{margin:0}
 .q p{margin:0 0 10px;font-weight:600}.q small{display:block;color:var(--faint);font-weight:400;font-size:13px;margin-top:2px}
 .yn{display:flex;gap:8px}.yn button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 14px "Inter Tight",sans-serif;cursor:pointer;transition:all .2s}
 .yn button:hover{border-color:#34407a}.yn button.on.y{background:rgba(79,227,161,.16);border-color:var(--ok);color:var(--ok)}.yn button.on.n{background:rgba(255,93,115,.12);border-color:var(--block);color:var(--block)}
@@ -437,7 +438,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 <section id="how"><div class="wrap">
   <span class="kicker reveal">Full review</span>
   <h2 class="reveal">When the scan isn't enough</h2>
-  <p class="sub">A scan reads your build. Plenty of rejections come from things that aren't in it: a missing demo account, no way to delete an account, social login without Sign in with Apple, subscriptions without terms, wording in your description. The full review checks those too, instantly.</p>
+  <p class="sub">A scan reads your build. Plenty of rejections come from things that aren't in it: a login wall in front of features that don't need an account, a missing demo account, account deletion that's really a support ticket, social login without Sign in with Apple, subscriptions without terms, wording in your description. The full review checks those too, instantly.</p>
   <div class="steps">
     <div class="step tilt reveal"><h3>Run the free scan</h3><p>Fix the blockers it finds. Many apps need nothing more.</p></div>
     <div class="step tilt reveal"><h3>Answer 10 quick questions</h3><p>Yes or no, about your App Store Connect setup, plus your App Store description. About two minutes.</p></div>
@@ -662,7 +663,7 @@ function watchReveals() { document.querySelectorAll(".reveal:not(.in)").forEach(
 watchReveals();
 
 // ---- what it checks ----
-const GROUPS = [["PLIST","Info.plist","Keys, permission strings, encryption, SDK"],["PRIV","Privacy manifest","Required-reason APIs and tracking"],["MACHO","Binary","Private APIs, deprecated frameworks, architectures"],["SIGN","Signing","Signature and entitlements"],["REVIEW","Review risks","Things reviewers often push back on"]];
+const GROUPS = [["PLIST","Info.plist","Keys, permission strings, encryption, SDK"],["PRIV","Privacy manifest","Required-reason APIs and tracking"],["MACHO","Binary","Private APIs, deprecated frameworks, architectures"],["SIGN","Signing","Signature and entitlements"],["AUTH","Sign-in","Social login SDKs and Sign in with Apple"],["REVIEW","Review risks","Things reviewers often push back on"]];
 fetch("/v1/signals").then(r => r.json()).then(list => {
   $("n-checks").textContent = list.length + " checks";
   $("groups").innerHTML = GROUPS.map(([p, name, sub]) => {

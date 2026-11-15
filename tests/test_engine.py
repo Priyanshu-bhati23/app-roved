@@ -110,3 +110,54 @@ def test_findings_are_sorted_blockers_first():
     info = dict(GOOD_INFO, NSAppTransportSecurity={"NSAllowsArbitraryLoads": True}, UIBackgroundModes=["audio"])
     report = scan(info=info, binary=build_macho(signed=False))
     assert [f.signal.severity.value for f in report.findings] == ["blocker", "warning", "info"]
+
+
+def _scan(**kw):
+    from approved import ipa
+    from approved.engine import analyze
+
+    from .builders import build_ipa, build_macho
+
+    return analyze(ipa.load(build_ipa(binary=build_macho(**kw))))
+
+
+def _ids(report):
+    return [f.signal.id for f in report.findings]
+
+
+def test_social_login_sdk_without_sign_in_with_apple_is_flagged():
+    report = _scan(symbols=("_OBJC_CLASS_$_GIDSignIn",), entitlements={})
+    assert "AUTH-001" in _ids(report)
+    assert report.auth["social_login_sdks"] == {"Google Sign-In": ["GIDSignIn"]}
+    assert report.auth["sign_in_with_apple"]["used"] is False
+
+
+def test_social_login_with_sign_in_with_apple_passes():
+    ent = {"com.apple.developer.applesignin": ["Default"]}
+    report = _scan(
+        symbols=("_OBJC_CLASS_$_GIDSignIn", "_OBJC_CLASS_$_ASAuthorizationAppleIDProvider"), entitlements=ent
+    )
+    assert "AUTH-001" not in _ids(report) and "AUTH-002" not in _ids(report)
+    assert report.auth["sign_in_with_apple"] == {"used": True, "entitlement": True, "entitlements_readable": True}
+
+
+def test_sign_in_with_apple_without_its_entitlement_is_flagged():
+    report = _scan(
+        symbols=("_OBJC_CLASS_$_ASAuthorizationAppleIDProvider",), entitlements={"aps-environment": "production"}
+    )
+    assert "AUTH-002" in _ids(report)
+    # an unsigned build has no entitlements to read, so we do not guess
+    assert "AUTH-002" not in _ids(_scan(symbols=("_OBJC_CLASS_$_ASAuthorizationAppleIDProvider",), signed=False))
+
+
+def test_sharing_only_facebook_sdk_is_not_a_login():
+    report = _scan(
+        dylibs=(
+            "/usr/lib/libSystem.B.dylib",
+            "@rpath/FBSDKCoreKit.framework/FBSDKCoreKit",
+            "@rpath/FBSDKShareKit.framework/FBSDKShareKit",
+        )
+    )
+    assert report.auth["social_login_sdks"] == {} and "AUTH-001" not in _ids(report)
+    login = _scan(dylibs=("/usr/lib/libSystem.B.dylib", "@rpath/FBSDKLoginKit.framework/FBSDKLoginKit"))
+    assert login.auth["social_login_sdks"] == {"Facebook Login": ["FBSDKLoginKit"]}

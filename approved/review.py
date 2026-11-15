@@ -34,10 +34,18 @@ class AppProfile(BaseModel):
 
     has_login: bool = False
     demo_account: bool = False
+    demo_full_access: bool = True  # no 2FA/SMS, no expiring trial
+    login_wall: bool = False  # login before anything can be tried
+    account_needed: bool = True  # the main features really depend on an account
     creates_accounts: bool = False
     in_app_deletion: bool = False
+    full_deletion: bool = True  # deletes data, not just deactivates, no support ticket
+    extra_personal_info: bool = False  # sign-up requires details the app does not need
     social_login: bool = False
     privacy_login: bool = False  # Sign in with Apple or an equivalent
+    social_revoke: bool = True  # in-app way to disconnect the social account
+    siwa_revoke: bool = True  # Sign in with Apple tokens revoked on deletion
+    deletion_billing_notice: bool = True  # delete flow warns subscribers billing continues
     sells_digital: bool = False
     uses_iap: bool = False
     subscriptions: bool = False
@@ -125,6 +133,21 @@ def setup_findings(p: AppProfile) -> list[tuple[str, dict]]:
         out.append(("SETUP-013", {"words": m}))
     if not p.review_notes:
         out.append(("SETUP-014", {"review_notes": False}))
+    # sign-in and account rules (5.1.1(v), 2.1, Apple's account deletion requirements)
+    if p.has_login and p.login_wall and not p.account_needed:
+        out.append(("SETUP-015", {"login_before_use": True, "account_based_features": False}))
+    if p.creates_accounts and p.in_app_deletion and not p.full_deletion:
+        out.append(("SETUP-016", {"in_app_deletion": True, "deletes_account_and_data": False}))
+    if p.creates_accounts and p.extra_personal_info:
+        out.append(("SETUP-017", {"extra_personal_info_required": True}))
+    if p.social_login and not p.social_revoke:
+        out.append(("SETUP-018", {"social_login": True, "in_app_disconnect": False}))
+    if p.creates_accounts and p.privacy_login and not p.siwa_revoke:
+        out.append(("SETUP-019", {"sign_in_with_apple": True, "tokens_revoked_on_deletion": False}))
+    if p.creates_accounts and p.subscriptions and not p.deletion_billing_notice:
+        out.append(("SETUP-020", {"subscriptions": True, "billing_notice_on_deletion": False}))
+    if p.has_login and p.demo_account and not p.demo_full_access:
+        out.append(("SETUP-021", {"demo_account": True, "full_access": False}))
     return out
 
 
@@ -172,8 +195,18 @@ def _items(scan: Report | None, profile: AppProfile | None) -> list[Item]:
                     evidence=evidence,
                 )
             )
+    # The same problem found in the build and in the answers is one item, with the build as evidence.
+    for build_id, setup_id in _SAME_PROBLEM:
+        setup = next((i for i in items if i.id == setup_id), None)
+        build = [i for i in items if i.id == build_id]
+        if setup and build:
+            setup.evidence = {**setup.evidence, "found_in_build": build[0].evidence}
+            items = [i for i in items if i.id != build_id]
     items.sort(key=lambda i: (_ORDER[i.severity], i.source != "build", i.id))
     return items
+
+
+_SAME_PROBLEM = (("AUTH-001", "SETUP-003"),)
 
 
 # ---------- rejection help ----------
@@ -191,12 +224,18 @@ def _chunks_for(numbers: list[str], text: str, kb: KnowledgeBase):
     picked = []
     by_title = {c.title.split(" ")[0]: c for c in kb.chunks if c.id.startswith("kb:guidelines#")}
     for n in numbers:
+        # 5.1.1(v) -> its own section when the knowledge base has one
+        for sub in re.findall(re.escape(n) + r"\s*\(([a-z]{1,4})\)", text, flags=re.I):
+            c = by_title.get(f"{n}({sub.lower()})")
+            if c and c not in picked:
+                picked.append(c)
         # 3.1.2(c) -> 3.1.2, 2.3.10 -> 2.3 if there is no exact section
         parts = n.split(".")
         for k in range(len(parts), 1, -1):
             c = by_title.get(".".join(parts[:k]))
-            if c and c not in picked:
-                picked.append(c)
+            if c:
+                if c not in picked:
+                    picked.append(c)
                 break
     for c in kb.search(text, k=3):
         if c not in picked and len(picked) < 4:

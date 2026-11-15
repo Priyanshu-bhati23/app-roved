@@ -28,8 +28,15 @@ def ids(profile):
 
 def test_setup_catalog_is_consistent_and_every_rule_has_an_entry():
     catalog = load_setup_catalog()
-    assert len(catalog) == 14
+    assert len(catalog) == 21
     everything = AppProfile(
+        login_wall=True,
+        account_needed=False,
+        demo_account=True,
+        demo_full_access=False,
+        extra_personal_info=True,
+        social_revoke=False,
+        privacy_login=False,
         has_login=True,
         creates_accounts=True,
         social_login=True,
@@ -44,8 +51,20 @@ def test_setup_catalog_is_consistent_and_every_rule_has_an_entry():
         review_notes=False,
         description="Beta! Also on Android and Google Play. Lorem ipsum.",
     )
-    found = ids(everything)
-    assert len(found) == 14 and all(i in catalog for i in found)
+    # deletion that exists but only deactivates, with Sign in with Apple tokens left alive
+    partial = AppProfile(
+        has_login=True,
+        creates_accounts=True,
+        in_app_deletion=True,
+        full_deletion=False,
+        privacy_login=True,
+        siwa_revoke=False,
+        subscriptions=True,
+        deletion_billing_notice=False,
+    )
+    found = ids(everything) + ids(partial)
+    assert ids(partial) == ["SETUP-001", "SETUP-005", "SETUP-016", "SETUP-019", "SETUP-020"]
+    assert sorted(set(found)) == sorted(s.id for s in catalog)
 
 
 def test_a_well_set_up_app_has_no_setup_findings():
@@ -127,3 +146,50 @@ def test_review_endpoint(monkeypatch):
     assert r.json()["rejection"]["guidelines"] == ["2.1"]
     assert client.post("/v1/review", json={"plan": "rescue"}).status_code == 422
     assert client.post("/v1/review", json={"plan": "review"}).status_code == 422
+
+
+def test_sign_in_rules_follow_apple_5_1_1_v():
+    # Senad's case: a login wall in front of features that work without an account
+    assert ids(AppProfile(has_login=True, demo_account=True, login_wall=True, account_needed=False)) == ["SETUP-015"]
+    # a login wall is fine when the app is account-based, or when there is a guest mode
+    assert ids(AppProfile(has_login=True, demo_account=True, login_wall=True, account_needed=True)) == []
+    assert ids(AppProfile(has_login=True, demo_account=True, login_wall=False, account_needed=False)) == []
+    # no in-app deletion at all is SETUP-002, not also SETUP-016
+    assert ids(AppProfile(creates_accounts=True, in_app_deletion=False, full_deletion=False)) == ["SETUP-002"]
+    assert ids(AppProfile(social_login=True, privacy_login=True, social_revoke=False)) == ["SETUP-018"]
+    assert ids(AppProfile(has_login=True, demo_account=True, demo_full_access=False)) == ["SETUP-021"]
+    assert ids(AppProfile(has_login=True, demo_full_access=False)) == ["SETUP-001"]
+
+
+def test_rescue_for_a_login_wall_rejection_uses_the_sign_in_section():
+    rejection = (
+        "Guideline 5.1.1(v) - Legal - Privacy - Data Collection and Storage\n"
+        "We noticed that your app requires users to register or log in to access features that are not account-based."
+    )
+    help_ = rescue(rejection, None)
+    assert help_.guidelines == ["5.1.1"]
+    assert "without logging in" in help_.meaning and "guest" in help_.meaning
+    kb = rag.load_knowledge_base()
+    deletion = rescue(
+        "Guideline 5.1.1(v) - your app supports account creation"
+        " but does not include an option to initiate account deletion",
+        None,
+        kb,
+    )
+    assert "delet" in deletion.meaning
+    from approved.review import _chunks_for
+
+    titles = [c.title for c in _chunks_for(["5.1.1"], "5.1.1(v) account deletion option", kb)]
+    assert titles[0].startswith("5.1.1(v)") and "Account deletion in the app" in titles
+
+
+def test_a_problem_found_in_build_and_answers_is_reported_once():
+    scan = analyze(ipa.load(build_ipa(binary=build_macho(symbols=("_OBJC_CLASS_$_GIDSignIn",), entitlements={}))))
+    review = build_review(scan, AppProfile(has_login=True, demo_account=True, social_login=True), None, None)
+    ids_ = [i.id for i in review.items]
+    assert "SETUP-003" in ids_ and "AUTH-001" not in ids_
+    merged = next(i for i in review.items if i.id == "SETUP-003")
+    assert merged.evidence["found_in_build"]["social_login_sdks"] == {"Google Sign-In": ["GIDSignIn"]}
+    # answered "we offer Sign in with Apple" while the build shows none: the build finding stays
+    kept = build_review(scan, AppProfile(social_login=True, privacy_login=True), None, None)
+    assert "AUTH-001" in [i.id for i in kept.items]

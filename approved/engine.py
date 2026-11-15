@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .catalog import Catalog, Finding, Report, Severity, load_catalog
-from .checks import REGISTRY, Settings
+from .checks import REGISTRY, Settings, auth_summary
 from .ipa import AppBundle
 
 _ORDER = {Severity.BLOCKER: 0, Severity.WARNING: 1, Severity.INFO: 2}
@@ -32,4 +32,5 @@ def analyze(bundle: AppBundle, settings: Settings | None = None, catalog: Catalo
         verdict=verdict,
         counts=counts,
         findings=findings,
+        auth=auth_summary(bundle),
     )

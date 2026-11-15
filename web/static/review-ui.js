@@ -17,12 +17,27 @@
 
   // [key, question, hint, follow-ups shown when the answer is yes, default]
   const QUESTIONS = [
-    ["has_login", "Does someone need to log in to use the app?", "", [["demo_account", "Have you added a demo account for the reviewer in App Store Connect?", "App Review Information → Sign-in required"]]],
-    ["creates_accounts", "Can people create an account inside the app?", "", [["in_app_deletion", "Can they delete that account from inside the app?", "A link to email support doesn't count"]]],
-    ["social_login", "Do you offer Google, Facebook or another social login?", "", [["privacy_login", "Do you also offer Sign in with Apple (or a similar private login)?", ""]]],
+    ["has_login", "Does someone need to log in to use the app?", "", [
+      ["demo_account", "Have you added a demo account for the reviewer in App Store Connect?", "App Review Information → Sign-in required (or a full demo mode)", [
+        ["demo_full_access", "Can it reach every feature with no 2FA code, SMS or expiring trial?", "", [], true]]],
+      ["login_wall", "Do people have to log in before they can try anything?", "No guest mode or skip button", [
+        ["account_needed", "Do the main features really depend on an account?", "Yes: synced data, messaging, a service they already pay for. No: browsing, reading, tools, single-player games"]]],
+    ]],
+    ["creates_accounts", "Can people create an account inside the app?", "Including guest accounts made automatically", [
+      ["in_app_deletion", "Can they delete that account from inside the app?", "A link to email support doesn't count", [
+        ["full_deletion", "Does it delete the account and its data, not just deactivate it, without contacting support?", "A web page linked straight from the app is fine", [], true]]],
+      ["extra_personal_info", "Does sign-up require details the app doesn't need, like phone, birthday or address?", "Required fields only; optional ones are fine", [], false],
+    ]],
+    ["social_login", "Do you offer Google, Facebook or another social login?", "", [
+      ["privacy_login", "Do you also offer Sign in with Apple (or a similar private login)?", "", [
+        ["siwa_revoke", "When an account is deleted, do you revoke its Sign in with Apple tokens?", "Via the Sign in with Apple REST API", [], true]]],
+      ["social_revoke", "Can people disconnect the social account from inside the app?", "Revokes the token and stops data sharing", [], true],
+    ]],
     ["sells_digital", "Do you sell digital content, premium features or subscriptions?", "Not physical goods or real-world services", [
       ["uses_iap", "Are they sold through Apple's in-app purchase?", ""],
-      ["subscriptions", "Are any of them auto-renewing subscriptions?", "", [["terms_and_privacy_links", "Does your App Store page link to Terms of Use (EULA) and your privacy policy?", ""]]],
+      ["subscriptions", "Are any of them auto-renewing subscriptions?", "", [
+        ["terms_and_privacy_links", "Does your App Store page link to Terms of Use (EULA) and your privacy policy?", ""],
+        ["deletion_billing_notice", "If people can delete their account, does that flow warn subscribers that billing continues until they cancel?", "Answer yes if accounts can't be deleted or created", [], true]]],
     ]],
     ["privacy_policy", "Is a privacy policy linked in App Store Connect and inside the app?", "", [], true],
     ["user_content", "Can people post content or message each other?", "Posts, comments, chat, profiles", [["report_and_block", "Can users report content and block other users?", ""]]],
@@ -44,8 +59,8 @@
     const [key, text, hint, subs = [], def] = q;
     const open = answers[key] === true;
     return '<div class="q" style="--i:' + i + '"><p>' + esc(text) + (hint ? "<small>" + esc(hint) + "</small>" : "") + "</p>" + ynHTML(key, def) +
-      subs.map(sq => '<div class="sub-q" data-parent="' + key + '"' + (open ? "" : " hidden") + "><p>" + esc(sq[1]) + (sq[2] ? "<small>" + esc(sq[2]) + "</small>" : "") + "</p>" + ynHTML(sq[0]) +
-        (sq[3] || []).map(ssq => '<div class="sub-q" data-parent="' + sq[0] + '"' + (answers[sq[0]] === true ? "" : " hidden") + "><p>" + esc(ssq[1]) + "</p>" + ynHTML(ssq[0]) + "</div>").join("") + "</div>").join("") + "</div>";
+      subs.map(sq => '<div class="sub-q" data-parent="' + key + '"' + (open ? "" : " hidden") + "><p>" + esc(sq[1]) + (sq[2] ? "<small>" + esc(sq[2]) + "</small>" : "") + "</p>" + ynHTML(sq[0], sq[4]) +
+        (sq[3] || []).map(ssq => '<div class="sub-q" data-parent="' + sq[0] + '"' + (answers[sq[0]] === true ? "" : " hidden") + "><p>" + esc(ssq[1]) + (ssq[2] ? "<small>" + esc(ssq[2]) + "</small>" : "") + "</p>" + ynHTML(ssq[0], ssq[4]) + "</div>").join("") + "</div>").join("") + "</div>";
   }
 
   function render() {
@@ -59,7 +74,7 @@
     if (key === "q1" || key === "q2") {
       $("wz-title").textContent = key === "q1" ? "Accounts, login and payments" : "Content, privacy and tracking";
       const qs = key === "q1" ? QUESTIONS.slice(0, 4) : QUESTIONS.slice(4);
-      body.innerHTML = qs.map(qHTML).join("");
+      body.innerHTML = (key === "q1" ? detected(scan) : "") + qs.map(qHTML).join("");
     } else if (key === "desc") {
       $("wz-title").textContent = "Your App Store description";
       body.innerHTML = '<div class="q"><p>Paste your App Store description (optional)<small>We look for wording reviewers flag: other platforms, beta or coming-soon language, placeholder text.</small></p><textarea class="in" id="wz-desc" maxlength="8000" placeholder="Paste the description from App Store Connect">' + esc(answers.description || "") + "</textarea></div>" +
@@ -71,6 +86,25 @@
         (scan ? '<div class="q"><p>✓ Your scan of <b>' + esc(scan.app_name) + "</b> will be included<small>So build problems show up in the same report.</small></p></div>" : "") +
         '<div class="q"><p>Email (optional)<small>Only for updates. The answer appears right here.</small></p><input class="in" id="wz-email" type="email" maxlength="200" autocomplete="email" value="' + esc(answers.email || "") + '"></div>';
     }
+  }
+
+  // what the build already told us about sign-in: pre-answer it and say so
+  let prefilled = null;
+  function detected(scan) {
+    const a = scan && scan.auth;
+    if (!a || !a.social_login_sdks) return "";
+    const sdks = Object.keys(a.social_login_sdks), siwa = a.sign_in_with_apple || {};
+    const hasSiwa = !!(siwa.used || siwa.entitlement);
+    if (prefilled !== scan) {
+      prefilled = scan;
+      if (sdks.length) { answers.has_login = true; answers.social_login = true; }
+      if (sdks.length || hasSiwa) answers.privacy_login = hasSiwa;
+    }
+    if (!sdks.length && !hasSiwa) return "";
+    const bits = [];
+    if (sdks.length) bits.push(sdks.map(esc).join(", "));
+    bits.push(hasSiwa ? "Sign in with Apple" : "no Sign in with Apple");
+    return '<div class="q detected"><p>🔎 Found in your build: <b>' + bits.join(" · ") + "</b><small>We pre-filled those answers. Change them if they're wrong.</small></p></div>";
   }
 
   body.addEventListener("click", e => {
