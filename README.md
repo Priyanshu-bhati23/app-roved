@@ -29,6 +29,19 @@ These are not conventions, they are enforced:
 - **The catalog validates itself.** Loading fails if an `OFFICIAL` signal lacks an Apple URL, if a non-official signal carries a source, or if an unverifiable signal is anything above `info`.
 - **The LLM explains; it does not decide.** The RAG layer receives a finding plus retrieved passages and writes 2–4 sentences. If the answer has no citation, or cites a passage that was not retrieved, it is discarded and a deterministic template is used instead.
 
+
+## Hosted site
+
+`index.py` serves the hosted version at [app-roved.vercel.app](https://app-roved.vercel.app): a landing page,
+the free scan and a form for paid reviews (`web/`). Hosting limits uploads to about 4.5 MB, so the page trims
+each .ipa in the browser first (`web/static/slim.js`): it keeps Info.plist, privacy manifests and each binary's
+header, load commands, symbol strings and code signature, and drops compiled code and assets. A 48 MB test build
+becomes about 2.5 KB and produces an identical report (`tests/test_slim.py`).
+
+The site is configured with environment variables: `CONTACT_EMAIL`, `ORDER_WEBHOOK_URL` (a Discord or Slack
+webhook that receives each order), `PAY_URL_REVIEW`, `PAY_URL_RESCUE`, `PRICE_REVIEW`, `PRICE_RESCUE` and
+`LAUNCH_NOTE`. See `web/app.py`.
+
 ## Architecture
 
 ```mermaid
