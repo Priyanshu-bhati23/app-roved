@@ -59,6 +59,67 @@ header.hero{position:relative;padding:56px 0 34px;overflow:hidden}
 .stage-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font:12px "JetBrains Mono",monospace;color:var(--faint);transition:opacity .6s;pointer-events:none}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr}.stage{height:440px;margin:-6px -20px 0}}
 .no-3d .stage{display:none}
+/* ---------- page-wide 3D ---------- */
+#bg3d{position:fixed;inset:0;z-index:-1;perspective:900px;overflow:hidden;pointer-events:none}
+#bg3d i{position:absolute;left:0;top:0;display:grid;place-items:center;color:rgba(255,255,255,.75);font-style:normal;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 20px 40px rgba(0,0,0,.35);will-change:transform}
+body{background:transparent}html{background:var(--bg)}
+#spot{position:fixed;left:0;top:0;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(closest-side,rgba(95,212,255,.07),transparent);will-change:transform}
+main,header,section,footer,nav{position:relative;z-index:1}
+section{background:linear-gradient(180deg,rgba(7,8,15,.55),rgba(7,8,15,.72))}
+.tilt.tilting>*{transform:translateZ(22px)}
+.tilt>*{transition:transform .25s ease}
+.js .reveal{transform:perspective(1200px) rotateX(16deg) translateY(44px)}
+.kicker{display:inline-block;font:500 12px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+
+/* trust flip cards */
+.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+.flip{perspective:900px;min-height:132px;cursor:pointer;outline:none}
+.flip .inner{position:relative;height:100%;min-height:132px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.flip:hover .inner,.flip.flipped .inner,.flip:focus-visible .inner{transform:rotateY(180deg)}
+.flip .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:linear-gradient(160deg,var(--panel2),var(--bg2));display:flex;flex-direction:column;justify-content:center;gap:4px}
+.flip .face b{font-size:24px;letter-spacing:-.02em}.flip .face span{color:var(--muted);font-size:14px}
+.flip .face .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(95,212,255,.12);color:var(--acc);margin-bottom:6px}
+.flip .back{transform:rotateY(180deg);background:linear-gradient(160deg,#0d2433,#0b0d18);border-color:rgba(95,212,255,.4)}
+.flip .back a{font-size:14px}
+@media (max-width:900px){.trust{grid-template-columns:1fr 1fr}}
+
+/* privacy: exploded build */
+.priv-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:30px;align-items:center}
+.priv-list{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:12px}
+.priv-list li{display:flex;gap:12px;align-items:flex-start;color:var(--muted)}
+.priv-list i{flex:none;width:12px;height:12px;border-radius:4px;margin-top:6px}
+.meter{display:inline-flex;align-items:baseline;gap:10px;margin-top:22px;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:var(--bg2);font:13px "JetBrains Mono",monospace;color:var(--muted)}
+.meter b{font:800 28px "Inter Tight",sans-serif;color:var(--ink);min-width:6ch;letter-spacing:-.02em}
+.stack-wrap{position:relative;height:460px;perspective:1300px;display:grid;place-items:center}
+.stack{position:relative;top:50px;width:250px;height:250px;transform-style:preserve-3d;transform:rotateX(56deg) rotateZ(-36deg)}
+.layer{position:absolute;inset:0;border-radius:22px;transform-style:preserve-3d;display:flex;align-items:flex-end;padding:16px;font:600 13px "JetBrains Mono",monospace;color:var(--ink);border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 60px rgba(0,0,0,.45);transition:opacity .3s;will-change:transform}
+.layer span{display:block;line-height:1.35}.layer small{display:block;color:var(--faint);font-weight:400;margin-top:2px}
+.layer.keep{background:linear-gradient(135deg,rgba(40,46,80,.92),rgba(18,21,40,.95))}
+.layer.go{background:linear-gradient(135deg,rgba(95,212,255,.85),rgba(59,130,246,.75));color:#03141c;border-color:rgba(255,255,255,.5);box-shadow:0 0 40px rgba(95,212,255,.35),0 30px 60px rgba(0,0,0,.4)}
+.layer.go small{color:rgba(3,20,28,.75)}
+.sent-box{position:absolute;right:6%;top:14%;padding:12px 14px;border-radius:14px;background:rgba(15,18,34,.9);border:1px solid rgba(79,227,161,.5);font:12px "JetBrains Mono",monospace;color:var(--ok);opacity:0;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.sent-box b{display:block;color:var(--ink);font:700 15px "Inter Tight",sans-serif}
+.keep-tag{position:absolute;left:4%;bottom:6%;font:12px "JetBrains Mono",monospace;color:var(--faint);display:flex;gap:8px;align-items:center}
+@media (max-width:900px){.priv-grid{grid-template-columns:1fr}.stack-wrap{height:400px}.stack{width:200px;height:200px}}
+
+/* testimonials coverflow */
+#love .flow{position:relative;height:250px;perspective:1100px;transform-style:preserve-3d;touch-action:pan-y;user-select:none}
+.qcard{position:absolute;left:50%;top:0;width:min(460px,78vw);margin:0 0 0 calc(min(460px,78vw) / -2);padding:26px;border-radius:20px;background:linear-gradient(160deg,var(--panel2),var(--bg2));border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.45);transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .5s;cursor:pointer}
+.qcard.on{border-color:rgba(95,212,255,.45)}
+.qcard blockquote{margin:0 0 18px;font-size:18px;line-height:1.5}
+.qcard figcaption{display:flex;gap:12px;align-items:center}
+.qcard .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--acc-ink);background:linear-gradient(135deg,#7fe0ff,#9b6bff)}
+.qcard b{display:block}.qcard small{color:var(--faint)}
+.flow-ctl{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:6px}
+@media (max-width:600px){#love .flow{height:310px}.qcard blockquote{font-size:16px}}
+.flow-ctl .arrow{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);color:var(--ink);cursor:pointer;font-size:18px}
+.dots{display:flex;gap:8px}.dots button{width:8px;height:8px;border-radius:50%;border:0;background:var(--line);cursor:pointer;padding:0}.dots button.on{background:var(--acc);width:22px;border-radius:4px}
+
+/* FAQ unfolds in 3D */
+details[open] p{animation:unfold .5s cubic-bezier(.2,.8,.2,1);transform-origin:top}
+@keyframes unfold{from{opacity:0;transform:perspective(700px) rotateX(-75deg)}to{opacity:1;transform:none}}
+details{transition:border-color .2s,transform .2s}details:hover{border-color:#34407a;transform:translateX(4px)}
+@media (prefers-reduced-motion:reduce){details[open] p{animation:none}.flip .inner,.qcard{transition:none}}
 /* Rovy, the tip-dropping mascot */
 #rovy{position:fixed;right:14px;bottom:10px;z-index:30;display:flex;align-items:flex-end;gap:6px;pointer-events:none;transition:opacity .3s,transform .3s}
 #rovy[hidden]{display:none}
@@ -184,9 +245,10 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </head>
 <body>
 <script id="cfg" type="application/json">{{CONFIG_JSON}}</script>
+<div id="bg3d" aria-hidden="true"></div><div id="spot" aria-hidden="true"></div>
 <nav><div class="wrap">
   <a class="logo" href="#top"><i></i>App-roved</a>
-  <div class="links"><a href="#checks">What it checks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="btn sm" href="#scan">Scan free</a></div>
+  <div class="links"><a href="#private">Privacy</a><a href="#checks">What it checks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="btn sm" href="#scan">Scan free</a></div>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
@@ -195,7 +257,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
       <span class="eyebrow">For iOS developers about to hit Submit</span>
       <h1>Catch the App Store rejection <em>before</em> Apple does.</h1>
       <p class="lede">Drop your .ipa and see what App Review will flag: a missing privacy manifest, empty permission strings, a development-signed build, an outdated SDK. Every finding comes with the Apple rule it comes from.</p>
-      <div class="hero-cta"><a class="btn" href="#scan">Scan my build, free</a><button class="btn ghost" id="sample-top" type="button">Watch a sample scan</button></div>
+      <div class="hero-cta"><a class="btn mag" href="#scan">Scan my build, free</a><button class="btn ghost mag" id="sample-top" type="button">Watch a sample scan</button></div>
     </div>
     <div class="stage" id="stage" aria-label="Interactive 3D phone. Drag to spin."><canvas id="phone3d"></canvas><div class="chips" id="chips"></div><div class="stage-hint" id="stage-hint">Drag to spin</div></div>
   </div>
@@ -216,14 +278,50 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
     <div id="report"></div>
   </div>
 
-  <div class="stats">
-    <div class="stat tilt"><b id="n-checks">19 checks</b><span>run on the binary and Info.plist itself, not on guesses</span></div>
-    <div class="stat tilt"><b>Under 30 seconds</b><span>from drop to report, with a plain-English explanation of every finding</span></div>
-    <div class="stat tilt"><b>0 bytes of compiled code</b><span>uploaded: a 150 MB build becomes a few kilobytes before it leaves your browser</span></div>
+  <div class="trust">
+    <div class="flip" tabindex="0"><div class="inner">
+      <div class="face"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><b>0 bytes</b><span>of your compiled code uploaded</span></div>
+      <div class="face back"><span>Your browser trims the build first. In our test a 45.8 MB build became 2.4 KB.</span><a href="#private">See how ↓</a></div></div></div>
+    <div class="flip" tabindex="0"><div class="inner">
+      <div class="face"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></div><b id="n-checks">19 checks</b><span>on the binary and Info.plist</span></div>
+      <div class="face back"><span>Each finding links to the Apple rule behind it, and says how sure we are that it's a rule.</span><a href="#checks">See the list ↓</a></div></div></div>
+    <div class="flip" tabindex="0"><div class="inner">
+      <div class="face"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div><b>Open source</b><span>read every check yourself</span></div>
+      <div class="face back"><span>The scanning engine is public on GitHub, with 58 automated tests.</span><a href="https://github.com/Priyanshu-bhati23/app-roved" target="_blank" rel="noopener">View the code ↗</a></div></div></div>
+    <div class="flip" tabindex="0"><div class="inner">
+      <div class="face"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><b>&lt; 30 seconds</b><span>from drop to report</span></div>
+      <div class="face back"><span>Every finding comes with a plain-English explanation. Save the report as a PDF.</span><a href="#scan">Try it ↑</a></div></div></div>
   </div>
 </div></header>
 
+<section id="private"><div class="wrap">
+  <div class="priv-grid">
+    <div class="reveal">
+      <span class="kicker">Private by design</span>
+      <h2>Your code never leaves your computer.</h2>
+      <p class="sub" style="margin-bottom:0">An .ipa is a zip of everything in your app. The checks only need a few small parts of it, so your browser takes those out and leaves the rest on your machine. Scroll to watch it happen.</p>
+      <ul class="priv-list">
+        <li><i style="background:#3a4170"></i><span>Images, assets and compiled code stay on your computer.</span></li>
+        <li><i style="background:var(--acc)"></i><span>Only Info.plist, privacy manifests and binary headers are uploaded, then discarded after the scan.</span></li>
+      </ul>
+      <div class="meter">uploaded <b>45.8 MB</b> of a 45.8 MB test build</div>
+    </div>
+    <div class="stack-wrap" aria-hidden="true">
+      <div class="stack">
+        <div class="layer keep"><span>Images &amp; assets<small>stays on your computer</small></span></div>
+        <div class="layer keep"><span>Compiled code<small>stays on your computer</small></span></div>
+        <div class="layer keep"><span>Framework code<small>stays on your computer</small></span></div>
+        <div class="layer go"><span>Binary headers<small>libraries, symbol names, signature</small></span></div>
+        <div class="layer go"><span>Info.plist + manifests<small>keys and privacy declarations</small></span></div>
+      </div>
+      <div class="sent-box">→ App-roved<b>2.4 KB scanned</b>not stored</div>
+      <div class="keep-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>everything else stays local</div>
+    </div>
+  </div>
+</div></section>
+
 <section id="checks"><div class="wrap">
+  <span class="kicker reveal">The free scan</span>
   <h2 class="reveal">What the scan checks</h2>
   <p class="sub">These are the build problems that get apps rejected or bounced at upload. Each check reads the actual files in your build.</p>
   <div class="groups" id="groups"></div>
@@ -235,6 +333,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </div></section>
 
 <section id="how"><div class="wrap">
+  <span class="kicker reveal">Human review</span>
   <h2 class="reveal">When the scan isn't enough</h2>
   <p class="sub">A scan reads your build. Plenty of rejections come from things that aren't in it: your screenshots, your privacy labels, a missing demo account, how sign-in works, in-app purchase setup. That's what the human review is for.</p>
   <div class="steps">
@@ -244,8 +343,16 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   </div>
 </div></section>
 
+<section id="love" hidden><div class="wrap">
+  <span class="kicker reveal">From early testers</span>
+  <h2 class="reveal">What people say</h2>
+  <div class="flow" aria-live="polite"></div>
+  <div class="flow-ctl"><button class="arrow prev" type="button" aria-label="Previous review">←</button><div class="dots"></div><button class="arrow next" type="button" aria-label="Next review">→</button></div>
+</div></section>
+
 <section id="pricing"><div class="wrap">
-  <h2 class="reveal">Pricing</h2>
+  <span class="kicker reveal">Pricing</span>
+  <h2 class="reveal">Simple, per app</h2>
   <p class="sub">The scan is free forever. Pay only when you want a person to look.</p>
   <div id="launch"></div>
   <div class="plans">
@@ -309,6 +416,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/phone3d.js"></script>
 <script src="/mascot.js"></script>
+<script src="/site3d.js"></script>
 <script>
 const CFG = JSON.parse(document.getElementById("cfg").textContent);
 const $ = id => document.getElementById(id);

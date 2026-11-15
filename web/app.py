@@ -49,6 +49,16 @@ def config() -> dict[str, str]:
     }
 
 
+def testimonials() -> list[dict]:
+    """Real quotes from real people, with their permission, in static/testimonials.json."""
+    try:
+        items = json.loads((STATIC / "testimonials.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    keep = ("name", "role", "quote")
+    return [{k: str(t.get(k, ""))[:400] for k in keep} for t in items if isinstance(t, dict) and t.get("quote")]
+
+
 # --- pages -----------------------------------------------------------------------------------
 
 
@@ -56,13 +66,14 @@ def config() -> dict[str, str]:
 def page() -> str:
     cfg = config()
     text = (STATIC / "index.html").read_text(encoding="utf-8")
-    text = text.replace("{{CONFIG_JSON}}", json.dumps(cfg).replace("<", "\\u003c"))
+    data = dict(cfg, testimonials=testimonials())
+    text = text.replace("{{CONFIG_JSON}}", json.dumps(data).replace("<", "\\u003c"))
     for key, value in cfg.items():
         text = text.replace("{{" + key.upper() + "}}", html.escape(value))
     return text
 
 
-SCRIPTS = ("slim.js", "phone3d.js", "mascot.js")
+SCRIPTS = ("slim.js", "phone3d.js", "mascot.js", "site3d.js")
 
 
 @app.get("/{name}.js", include_in_schema=False)

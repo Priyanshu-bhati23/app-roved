@@ -52,6 +52,14 @@ def test_page_renders_config_and_escapes_it(monkeypatch):
     assert client.get("/app.js").status_code == 404  # only the site's own scripts are served
 
 
+def test_testimonials_only_show_real_entries(monkeypatch, tmp_path):
+    (tmp_path / "testimonials.json").write_text('[{"name": "A", "quote": "Helpful"}, {"name": "B"}, "junk"]')
+    monkeypatch.setattr(web, "STATIC", tmp_path)
+    assert web.testimonials() == [{"name": "A", "role": "", "quote": "Helpful"}]
+    (tmp_path / "testimonials.json").write_text("not json")
+    assert web.testimonials() == []
+
+
 def test_sample_scan_finds_the_planted_problems():
     body = client.post("/v1/demo-scan").json()
     assert body["verdict"] == "blocked"
