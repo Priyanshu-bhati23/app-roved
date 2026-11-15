@@ -380,7 +380,7 @@
 
     // chips orbit the phone and fade behind it
     const rect = stage.getBoundingClientRect();
-    const radius = rect.width < 520 ? 1.5 : 1.75;
+    const radius = rect.width < 520 ? 1.22 : 1.75;
     chips.forEach((c, i) => {
       const a = c.angle + t * 0.25 * (m || 0.001) + phone.rotation.y * 0.3;
       v.set(Math.cos(a) * radius, c.y + phone.position.y, Math.sin(a) * radius * 0.75);

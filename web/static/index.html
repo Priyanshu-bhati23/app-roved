@@ -11,6 +11,13 @@
 <meta property="og:image" content="https://app-roved.vercel.app/og.png">
 <meta property="og:url" content="https://app-roved.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#07080f">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="App-roved">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235fd4ff'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='%2303141c' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -51,7 +58,23 @@ header.hero{position:relative;padding:56px 0 34px;overflow:hidden}
 @keyframes blink{to{opacity:.2;transform:scale(.6)}}
 .stage-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font:12px "JetBrains Mono",monospace;color:var(--faint);transition:opacity .6s;pointer-events:none}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr}.stage{height:440px;margin:-6px -20px 0}}
-.no-3d .stage{display:none}.no-3d .hero-grid{grid-template-columns:1fr}
+.no-3d .stage{display:none}
+/* Rovy, the tip-dropping mascot */
+#rovy{position:fixed;right:14px;bottom:10px;z-index:30;display:flex;align-items:flex-end;gap:6px;pointer-events:none;transition:opacity .3s,transform .3s}
+#rovy[hidden]{display:none}
+#rovy.away{opacity:0;transform:translateY(20px)}
+.rovy-bot{pointer-events:auto;width:150px;height:170px;border:0;padding:0;background:none;cursor:pointer;flex:none;-webkit-tap-highlight-color:transparent}
+.rovy-bot canvas{width:100%;height:100%;display:block}
+.rovy-bubble{pointer-events:auto;position:relative;max-width:290px;margin-bottom:96px;padding:12px 14px 10px;border-radius:16px 16px 4px 16px;background:rgba(15,18,34,.94);border:1px solid rgba(95,212,255,.45);box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 0 1px rgba(95,212,255,.08) inset;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transform:translateY(10px) scale(.94);transform-origin:bottom right;transition:opacity .25s,transform .35s cubic-bezier(.2,1.4,.4,1);visibility:hidden}
+.rovy-bubble.show{opacity:1;transform:none;visibility:visible}
+.rovy-count{font:500 11px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+.rovy-text{font-size:15px;line-height:1.45;color:var(--ink)}
+.rovy-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.rovy-next,.rovy-close{background:none;border:0;color:var(--acc);font:600 13px "Inter Tight",sans-serif;cursor:pointer;padding:4px 0}
+.rovy-close{color:var(--faint);font-size:18px;line-height:1;padding:0 2px}
+@media (max-width:600px){.chip{font-size:11.5px;padding:6px 9px}}
+@media (max-width:600px){#rovy{right:6px;bottom:4px}.rovy-bot{width:96px;height:112px}.rovy-bubble{max-width:min(240px,calc(100vw - 120px));margin-bottom:62px}.rovy-text{font-size:14px}}
+@media print{#rovy{display:none!important}}.no-3d .hero-grid{grid-template-columns:1fr}
 .tilt{transform-style:preserve-3d;transition:transform .25s ease,border-color .25s;will-change:transform;position:relative}
 .tilt:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(95,212,255,.10),transparent 45%);opacity:0;transition:opacity .3s}
 .tilt:hover:after{opacity:1}
@@ -277,9 +300,15 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   <div class="dlg-actions"><button class="btn ghost sm" type="button" id="cancel">Cancel</button><button class="btn sm" type="submit" id="send">Send request</button></div>
 </form></dialog>
 
+<div id="rovy" hidden>
+  <div class="rovy-bubble" role="status" aria-live="polite"><div class="rovy-count">Rovy</div><div class="rovy-text"></div>
+    <div class="rovy-actions"><button class="rovy-next" type="button">Next tip →</button><button class="rovy-close" type="button" aria-label="Hide tips">×</button></div></div>
+  <button class="rovy-bot" type="button" aria-label="Rovy, the App-roved robot. Tap for an App Store tip."><canvas></canvas></button>
+</div>
 <script src="/slim.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/phone3d.js"></script>
+<script src="/mascot.js"></script>
 <script>
 const CFG = JSON.parse(document.getElementById("cfg").textContent);
 const $ = id => document.getElementById(id);
@@ -345,6 +374,7 @@ async function scanSample() {
 function render(d, quiet) {
   lastReport = d;
   P3.result(d);
+  try { window.Mascot && window.Mascot.react(d); } catch (e) { console.warn(e); }
   const c = d.counts;
   const findings = d.findings.map(f => {
     const s = f.signal, x = f.explanation;

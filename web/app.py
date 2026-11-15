@@ -62,7 +62,7 @@ def page() -> str:
     return text
 
 
-SCRIPTS = ("slim.js", "phone3d.js")
+SCRIPTS = ("slim.js", "phone3d.js", "mascot.js")
 
 
 @app.get("/{name}.js", include_in_schema=False)
@@ -72,10 +72,33 @@ def script(name: str) -> Response:
     return Response((STATIC / (name + ".js")).read_bytes(), media_type="text/javascript")
 
 
-@app.get("/og.png", include_in_schema=False)
-def og_image() -> Response:
-    path = STATIC / "og.png"
-    if not path.exists():
+ICONS = ("og.png", "icon-192.png", "icon-512.png", "apple-touch-icon.png")
+
+MANIFEST = {
+    "name": "App-roved",
+    "short_name": "App-roved",
+    "description": "Catch App Store rejections before you submit.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#07080f",
+    "theme_color": "#07080f",
+    "icons": [
+        {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+        {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    ],
+}
+
+
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def manifest() -> Response:
+    return Response(json.dumps(MANIFEST), media_type="application/manifest+json")
+
+
+@app.get("/{name}.png", include_in_schema=False)
+def image(name: str) -> Response:
+    path = STATIC / (name + ".png")
+    if name + ".png" not in ICONS or not path.exists():
         raise HTTPException(404)
     return Response(path.read_bytes(), media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
