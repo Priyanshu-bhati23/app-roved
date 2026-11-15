@@ -44,6 +44,8 @@ def test_page_renders_config_and_escapes_it(monkeypatch):
     assert "<script>alert(1)</script>" not in body
     assert "{{" not in body
     assert client.get("/slim.js").headers["content-type"].startswith("text/javascript")
+    assert client.get("/phone3d.js").status_code == 200
+    assert client.get("/app.js").status_code == 404  # only the site's own scripts are served
 
 
 def test_sample_scan_finds_the_planted_problems():

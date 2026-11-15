@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>document.documentElement.classList.add("js")</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>App-roved · Catch App Store rejections before you submit</title>
@@ -34,10 +35,32 @@ nav .links a{color:var(--muted);text-decoration:none;font-size:15px}nav .links a
 .btn:disabled{opacity:.55;cursor:wait;transform:none}
 @media (max-width:720px){nav .links a:not(.btn){display:none}}
 
-header.hero{position:relative;padding:72px 0 34px;overflow:hidden}
+header.hero{position:relative;padding:56px 0 34px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:10px;align-items:center;margin-bottom:22px}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+.stage{position:relative;height:580px;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.stage:active{cursor:grabbing}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage:before{content:"";position:absolute;left:50%;top:52%;width:70%;height:70%;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(95,212,255,.18),rgba(155,107,255,.10) 55%,transparent);filter:blur(10px);pointer-events:none}
+.chips{position:absolute;inset:0;pointer-events:none}
+.chip{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(15,18,34,.72);border:1px solid rgba(95,212,255,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font:500 13px "JetBrains Mono",monospace;color:var(--ink);white-space:nowrap;transition:opacity .3s,border-color .3s,background .3s;will-change:transform}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc)}
+.chip.checking i{animation:blink .5s infinite alternate}
+.chip.ok{border-color:rgba(79,227,161,.6);background:rgba(10,40,30,.75)}.chip.ok i{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.chip.bad{border-color:rgba(255,93,115,.65);background:rgba(50,12,20,.75)}.chip.bad i{background:var(--block);box-shadow:0 0 12px var(--block)}
+@keyframes blink{to{opacity:.2;transform:scale(.6)}}
+.stage-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font:12px "JetBrains Mono",monospace;color:var(--faint);transition:opacity .6s;pointer-events:none}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}.stage{height:440px;margin:-6px -20px 0}}
+.no-3d .stage{display:none}.no-3d .hero-grid{grid-template-columns:1fr}
+.tilt{transform-style:preserve-3d;transition:transform .25s ease,border-color .25s;will-change:transform;position:relative}
+.tilt:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(95,212,255,.10),transparent 45%);opacity:0;transition:opacity .3s}
+.tilt:hover:after{opacity:1}
+.js .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js .reveal{opacity:1;transform:none;transition:none}.tilt{transition:none}}
 header.hero:before{content:"";position:absolute;inset:-40% -10% auto;height:620px;background:radial-gradient(closest-side,rgba(95,212,255,.16),transparent 70%);pointer-events:none}
 .eyebrow{display:inline-flex;gap:8px;align-items:center;font:500 12px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);border:1px solid #1f3a4c;background:#0a1824;padding:7px 11px;border-radius:999px}
-h1{font-size:clamp(36px,6.4vw,66px);line-height:1.02;margin:18px 0 18px;letter-spacing:-.035em;font-weight:800;max-width:16ch}
+h1{font-size:clamp(38px,5.4vw,64px);line-height:1.02;margin:18px 0 18px;letter-spacing:-.035em;font-weight:800;max-width:16ch}
 h1 em{font-style:normal;color:var(--acc)}
 .lede{color:var(--muted);font-size:clamp(17px,2vw,19px);max-width:62ch;margin:0 0 28px}
 h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.025em;line-height:1.1;margin:0 0 12px}
@@ -144,9 +167,15 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
-  <span class="eyebrow">For iOS developers about to hit Submit</span>
-  <h1>Catch the App Store rejection <em>before</em> Apple does.</h1>
-  <p class="lede">Drop your .ipa and see what App Review will flag: a missing privacy manifest, empty permission strings, a development-signed build, an outdated SDK. Every finding comes with the Apple rule it comes from.</p>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">For iOS developers about to hit Submit</span>
+      <h1>Catch the App Store rejection <em>before</em> Apple does.</h1>
+      <p class="lede">Drop your .ipa and see what App Review will flag: a missing privacy manifest, empty permission strings, a development-signed build, an outdated SDK. Every finding comes with the Apple rule it comes from.</p>
+      <div class="hero-cta"><a class="btn" href="#scan">Scan my build, free</a><button class="btn ghost" id="sample-top" type="button">Watch a sample scan</button></div>
+    </div>
+    <div class="stage" id="stage" aria-label="Interactive 3D phone. Drag to spin."><canvas id="phone3d"></canvas><div class="chips" id="chips"></div><div class="stage-hint" id="stage-hint">Drag to spin</div></div>
+  </div>
 
   <div class="scanner" id="scan">
     <label class="drop" id="drop">
@@ -165,17 +194,17 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
   </div>
 
   <div class="stats">
-    <div class="stat"><b id="n-checks">19 checks</b><span>run on the binary and Info.plist itself, not on guesses</span></div>
-    <div class="stat"><b>Under 30 seconds</b><span>from drop to report, with a plain-English explanation of every finding</span></div>
-    <div class="stat"><b>0 bytes of compiled code</b><span>uploaded: a 150 MB build becomes a few kilobytes before it leaves your browser</span></div>
+    <div class="stat tilt"><b id="n-checks">19 checks</b><span>run on the binary and Info.plist itself, not on guesses</span></div>
+    <div class="stat tilt"><b>Under 30 seconds</b><span>from drop to report, with a plain-English explanation of every finding</span></div>
+    <div class="stat tilt"><b>0 bytes of compiled code</b><span>uploaded: a 150 MB build becomes a few kilobytes before it leaves your browser</span></div>
   </div>
 </div></header>
 
 <section id="checks"><div class="wrap">
-  <h2>What the scan checks</h2>
+  <h2 class="reveal">What the scan checks</h2>
   <p class="sub">These are the build problems that get apps rejected or bounced at upload. Each check reads the actual files in your build.</p>
   <div class="groups" id="groups"></div>
-  <div class="prov">
+  <div class="prov reveal">
     <div><code>OFFICIAL</code><p>Stated in Apple's documentation or guidelines. Linked to the exact page.</p></div>
     <div><code>COMMUNITY_HEURISTIC</code><p>Widely reported by developers but not written down by Apple. Shown as a warning, never as a rule.</p></div>
     <div><code>NOT_PUBLICLY_VERIFIABLE</code><p>Folklore. Listed for completeness, and it can never fail your build.</p></div>
@@ -183,32 +212,32 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </div></section>
 
 <section id="how"><div class="wrap">
-  <h2>When the scan isn't enough</h2>
+  <h2 class="reveal">When the scan isn't enough</h2>
   <p class="sub">A scan reads your build. Plenty of rejections come from things that aren't in it: your screenshots, your privacy labels, a missing demo account, how sign-in works, in-app purchase setup. That's what the human review is for.</p>
   <div class="steps">
-    <div class="step"><h3>Run the free scan</h3><p>Fix the blockers it finds. Many apps need nothing more.</p></div>
-    <div class="step"><h3>Book a review</h3><p>Send your scan and your App Store Connect details. A developer goes through everything App Review looks at.</p></div>
-    <div class="step"><h3>Submit with confidence</h3><p>Within 24 hours you get a written fix list, ordered by what's most likely to get you rejected.</p></div>
+    <div class="step tilt reveal"><h3>Run the free scan</h3><p>Fix the blockers it finds. Many apps need nothing more.</p></div>
+    <div class="step tilt reveal"><h3>Book a review</h3><p>Send your scan and your App Store Connect details. A developer goes through everything App Review looks at.</p></div>
+    <div class="step tilt reveal"><h3>Submit with confidence</h3><p>Within 24 hours you get a written fix list, ordered by what's most likely to get you rejected.</p></div>
   </div>
 </div></section>
 
 <section id="pricing"><div class="wrap">
-  <h2>Pricing</h2>
+  <h2 class="reveal">Pricing</h2>
   <p class="sub">The scan is free forever. Pay only when you want a person to look.</p>
   <div id="launch"></div>
   <div class="plans">
-    <div class="plan">
+    <div class="plan tilt reveal">
       <h3>Free scan</h3><div class="price">$0</div><div class="per">unlimited</div>
       <ul><li>All build checks, in seconds</li><li>Plain-English explanation of each finding</li><li>Link to the Apple rule behind it</li><li>Save the report as a PDF</li></ul>
       <a class="btn ghost" href="#scan">Scan a build</a>
     </div>
-    <div class="plan hot">
+    <div class="plan hot tilt reveal">
       <span class="badge">Before you submit</span>
       <h3>Pre-submission review</h3><div class="price">{{PRICE_REVIEW}}</div><div class="per">per app version · reply within 24 hours</div>
       <ul><li>A developer goes through your scan and your build</li><li>App Store Connect checklist: screenshots, privacy labels, demo account, purchases, sign-in rules</li><li>Written fix list, ordered by rejection risk</li><li>One follow-up question by email</li></ul>
       <button class="btn order" data-plan="review" type="button">Book a review</button>
     </div>
-    <div class="plan">
+    <div class="plan tilt reveal">
       <span class="badge" style="background:var(--warn)">Already rejected</span>
       <h3>Rejection rescue</h3><div class="price">{{PRICE_RESCUE}}</div><div class="per">per rejection · reply within 24 hours</div>
       <ul><li>Send the message from App Review</li><li>What it actually means, and the guideline behind it</li><li>The exact changes to make</li><li>A reply to App Review, written for you</li></ul>
@@ -218,7 +247,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </div></section>
 
 <section id="faq"><div class="wrap">
-  <h2>Questions</h2>
+  <h2 class="reveal">Questions</h2>
   <details><summary>Is my app's code uploaded?</summary><p>No. Your browser opens the .ipa and keeps only Info.plist, privacy manifests and the headers of each binary (linked libraries, symbol names, SDK version, signing entitlements). Compiled code, images and assets stay on your machine. The trimmed file is scanned and not stored.</p></details>
   <details><summary>Does a clean scan guarantee approval?</summary><p>No, and nobody can promise that. Only Apple approves apps. The scan catches problems that can be detected in a build. Many rejections come from metadata, design or business rules instead, which is what the paid review covers.</p></details>
   <details><summary>What do I get from a review, exactly?</summary><p>A written report by email within 24 hours: every issue found, why it matters, and how to fix it, ordered by risk. For a rejection rescue you also get a ready-to-send reply to App Review.</p></details>
@@ -249,6 +278,8 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 </form></dialog>
 
 <script src="/slim.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/phone3d.js"></script>
 <script>
 const CFG = JSON.parse(document.getElementById("cfg").textContent);
 const $ = id => document.getElementById(id);
@@ -256,6 +287,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const SEV = {blocker:"var(--block)", warning:"var(--warn)", info:"var(--info)"};
 const mb = n => n >= 1048576 ? (n/1048576).toFixed(1) + " MB" : n >= 1024 ? (n/1024).toFixed(1) + " KB" : n + " B";
 let lastReport = null;
+const P3 = new Proxy({}, {get: (_, k) => (...a) => { try { const p = window.Phone3D; if (p && p[k]) p[k](...a); } catch (e) { console.warn(e); } }});
 
 if (CFG.launch_note) $("launch").innerHTML = '<span class="note">' + esc(CFG.launch_note) + '</span>';
 if (CFG.contact_email) $("contact").innerHTML = ' · <a href="mailto:' + esc(CFG.contact_email) + '">' + esc(CFG.contact_email) + '</a>';
@@ -272,9 +304,10 @@ function loadJSZip() {
   });
   return jszip;
 }
-function busy(on) { $("sample").disabled = on; $("file").disabled = on; }
+function busy(on) { $("sample").disabled = on; $("sample-top").disabled = on; $("file").disabled = on; }
 function say(html) { $("progress").innerHTML = html; }
 
+const atLeast = (ms, promise) => Promise.all([promise, new Promise(r => setTimeout(r, ms))]).then(([v]) => v);
 async function post(url, opts) {
   const r = await fetch(url, opts);
   let d = null; try { d = await r.json(); } catch (_) {}
@@ -287,28 +320,31 @@ async function scanFile(f) {
   if (!/\.ipa$/i.test(f.name)) { say('<span class="err">Please choose an .ipa file (Xcode → Product → Archive → Distribute App → Export).</span>'); return; }
   busy(true); $("report").innerHTML = ""; lastReport = null;
   try {
+    P3.scanning(f.name);
     say("Opening <b>" + esc(f.name) + "</b> (" + mb(f.size) + ") in your browser…");
     const JSZip = await loadJSZip();
     const slim = await AppRovedSlim.slimIPA(f, JSZip, step => say("Trimming in your browser: <b>" + esc(step) + "</b>"));
     if (slim.slimBytes > 4 * 1024 * 1024) throw new Error("This build is unusually large even after trimming. Book a review and we'll scan it for you.");
     say("Trimmed " + mb(slim.originalBytes) + " → <b>" + mb(slim.slimBytes) + "</b>. Uploading only that. Checking and writing explanations (about 10–20 s)…");
     const fd = new FormData(); fd.append("file", slim.blob, f.name);
-    render(await post("/v1/scans", {method:"POST", body:fd}));
+    render(await atLeast(2600, post("/v1/scans", {method:"POST", body:fd})));
     say("Scanned <b>" + esc(f.name) + "</b>. " + mb(slim.slimBytes) + " of " + mb(slim.originalBytes) + " left your computer.");
-  } catch (e) { say('<span class="err">' + esc(e.message || e) + '</span>'); }
+  } catch (e) { say('<span class="err">' + esc(e.message || e) + '</span>'); P3.idle(); }
   busy(false);
 }
 
 async function scanSample() {
   busy(true); $("report").innerHTML = ""; lastReport = null;
+  P3.scanning("Sample.ipa");
   say("Scanning a sample build with six planted problems. Writing explanations (about 10–20 s)…");
-  try { render(await post("/v1/demo-scan", {method:"POST"})); say("This is a sample build. Drop your own .ipa above to scan it."); }
-  catch (e) { say('<span class="err">' + esc(e.message) + '</span>'); }
+  try { const q = render.quietNext; render.quietNext = false; render(await atLeast(3200, post("/v1/demo-scan", {method:"POST"})), q); say("This is a sample build. Drop your own .ipa above to scan it."); }
+  catch (e) { say('<span class="err">' + esc(e.message) + '</span>'); P3.idle(); }
   busy(false);
 }
 
-function render(d) {
+function render(d, quiet) {
   lastReport = d;
+  P3.result(d);
   const c = d.counts;
   const findings = d.findings.map(f => {
     const s = f.signal, x = f.explanation;
@@ -327,7 +363,7 @@ function render(d) {
     '<div class="counts"><span class="pill b">' + c.blocker + ' blocker' + (c.blocker === 1 ? '' : 's') + '</span><span class="pill w">' + c.warning + ' warning' + (c.warning === 1 ? '' : 's') + '</span><span class="pill">' + c.info + ' info</span></div></div>' +
     (findings || '<p>No problems found in the build.</p>') +
     '<div class="upsell"><div><b>' + upTitle + '</b><p>' + upText + '</p></div><div class="report-actions"><button class="btn sm order" data-plan="review" type="button">Book a review · ' + esc(CFG.price_review) + '</button><button class="btn ghost sm" type="button" onclick="window.print()">Save as PDF</button></div></div>';
-  $("report").scrollIntoView({behavior:"smooth", block:"start"});
+  if (!quiet) $("report").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
 function summary() {
@@ -342,6 +378,23 @@ drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add(
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); scanFile(e.dataTransfer.files[0]); });
 $("sample").onclick = scanSample;
+$("sample-top").onclick = () => { render.quietNext = true; scanSample(); };
+
+// ---- 3D tilt and reveal ----
+const fine = matchMedia("(hover:hover) and (pointer:fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.addEventListener("pointermove", e => {
+  if (!fine) return;
+  const card = e.target.closest && e.target.closest(".tilt");
+  document.querySelectorAll(".tilt.tilting").forEach(c => { if (c !== card) { c.classList.remove("tilting"); c.style.transform = ""; } });
+  if (!card) return;
+  const r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  card.classList.add("tilting");
+  card.style.setProperty("--mx", (x * 100) + "%"); card.style.setProperty("--my", (y * 100) + "%");
+  card.style.transform = "perspective(900px) rotateX(" + ((0.5 - y) * 8).toFixed(2) + "deg) rotateY(" + ((x - 0.5) * 10).toFixed(2) + "deg) translateZ(6px)";
+});
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), {threshold: 0.12}) : null;
+function watchReveals() { document.querySelectorAll(".reveal:not(.in)").forEach(el => io ? io.observe(el) : el.classList.add("in")); }
+watchReveals();
 
 // ---- what it checks ----
 const GROUPS = [["PLIST","Info.plist","Keys, permission strings, encryption, SDK"],["PRIV","Privacy manifest","Required-reason APIs and tracking"],["MACHO","Binary","Private APIs, deprecated frameworks, architectures"],["SIGN","Signing","Signature and entitlements"],["REVIEW","Review risks","Things reviewers often push back on"]];
@@ -350,9 +403,10 @@ fetch("/v1/signals").then(r => r.json()).then(list => {
   $("groups").innerHTML = GROUPS.map(([p, name, sub]) => {
     const items = list.filter(s => s.id.startsWith(p + "-"));
     if (!items.length) return "";
-    return '<div class="group"><h3>' + name + '</h3><div class="g-sub">' + sub + '</div><ul>' +
+    return '<div class="group tilt reveal"><h3>' + name + '</h3><div class="g-sub">' + sub + '</div><ul>' +
       items.map(s => '<li><span class="dot" style="background:' + SEV[s.severity] + '"></span><span>' + esc(s.title) + '</span></li>').join("") + '</ul></div>';
   }).join("");
+  watchReveals();
 }).catch(() => {});
 
 // ---- orders ----

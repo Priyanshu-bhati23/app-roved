@@ -62,9 +62,14 @@ def page() -> str:
     return text
 
 
-@app.get("/slim.js", include_in_schema=False)
-def slim_js() -> Response:
-    return Response((STATIC / "slim.js").read_bytes(), media_type="text/javascript")
+SCRIPTS = ("slim.js", "phone3d.js")
+
+
+@app.get("/{name}.js", include_in_schema=False)
+def script(name: str) -> Response:
+    if name + ".js" not in SCRIPTS:
+        raise HTTPException(404)
+    return Response((STATIC / (name + ".js")).read_bytes(), media_type="text/javascript")
 
 
 @app.get("/og.png", include_in_schema=False)
