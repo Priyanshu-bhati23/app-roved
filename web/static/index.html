@@ -61,11 +61,12 @@ header.hero{position:relative;padding:56px 0 34px;overflow:hidden}
 .no-3d .stage{display:none}
 /* ---------- page-wide 3D ---------- */
 #bg3d{position:fixed;inset:0;z-index:-1;perspective:900px;overflow:hidden;pointer-events:none}
+#bg3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #bg3d i{position:absolute;left:0;top:0;display:grid;place-items:center;color:rgba(255,255,255,.75);font-style:normal;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 20px 40px rgba(0,0,0,.35);will-change:transform}
 body{background:transparent}html{background:var(--bg)}
-#spot{position:fixed;left:0;top:0;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(closest-side,rgba(95,212,255,.07),transparent);will-change:transform}
+#spot{position:fixed;left:0;top:0;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(closest-side,rgba(95,212,255,.10),transparent);will-change:transform}
 main,header,section,footer,nav{position:relative;z-index:1}
-section{background:linear-gradient(180deg,rgba(7,8,15,.55),rgba(7,8,15,.72))}
+section{background:linear-gradient(180deg,rgba(7,8,15,.25),rgba(7,8,15,.45))}
 .tilt.tilting>*{transform:translateZ(22px)}
 .tilt>*{transition:transform .25s ease}
 .js .reveal{transform:perspective(1200px) rotateX(16deg) translateY(44px)}
@@ -416,6 +417,7 @@ body{background:#fff;color:#000}.scanner{box-shadow:none;border:0;padding:0;back
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/phone3d.js"></script>
 <script src="/mascot.js"></script>
+<script src="/bg3d.js"></script>
 <script src="/site3d.js"></script>
 <script>
 const CFG = JSON.parse(document.getElementById("cfg").textContent);

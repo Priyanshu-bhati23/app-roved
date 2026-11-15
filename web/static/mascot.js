@@ -230,7 +230,7 @@
     }), { threshold: 0.35 });
     Object.keys(SECTION_TIPS).forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
   }
-  setTimeout(() => { if (!closed) say("Hi, I'm Rovy. Tap me any time for an App Store tip.", { label: "Rovy", ms: 7000 }); }, 2500);
+  setTimeout(() => { if (!closed) say("Hi, I'm Rovy. Tap me for an App Store tip, or tap the background to send a wave.", { label: "Rovy", ms: 7000 }); }, 2500);
 
   function react(d) {
     if (!d) return;

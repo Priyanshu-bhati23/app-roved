@@ -46,6 +46,7 @@ def test_page_renders_config_and_escapes_it(monkeypatch):
     assert client.get("/slim.js").headers["content-type"].startswith("text/javascript")
     assert client.get("/phone3d.js").status_code == 200
     assert client.get("/mascot.js").status_code == 200
+    assert client.get("/bg3d.js").status_code == 200
     assert client.get("/manifest.webmanifest").json()["display"] == "standalone"
     assert client.get("/icon-512.png").headers["content-type"] == "image/png"
     assert client.get("/secret.png").status_code == 404

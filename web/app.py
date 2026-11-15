@@ -73,7 +73,7 @@ def page() -> str:
     return text
 
 
-SCRIPTS = ("slim.js", "phone3d.js", "mascot.js", "site3d.js")
+SCRIPTS = ("slim.js", "phone3d.js", "mascot.js", "bg3d.js", "site3d.js")
 
 
 @app.get("/{name}.js", include_in_schema=False)

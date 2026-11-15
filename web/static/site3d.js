@@ -14,7 +14,7 @@
   addEventListener("scroll", () => { sy = scrollY; }, { passive: true });
 
   // ---------- floating icon field ----------
-  const field = document.getElementById("bg3d");
+  const field = window.__bg3d ? null : document.getElementById("bg3d"); // CSS fallback when WebGL is off
   const tiles = [];
   if (field) {
     const COLORS = [["#5fd4ff", "#3b82f6"], ["#9b6bff", "#5b3bd1"], ["#4fe3a1", "#16a37a"], ["#ffb547", "#ff7a45"], ["#ff6b8b", "#c2185b"], ["#7fe0ff", "#2bb3e0"]];
